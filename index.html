@@ -6,23 +6,24 @@
     <title>EUREKA - Tutor de Física y Química</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
     <style>
         body { font-family: 'Space Grotesk', sans-serif; background-color: #0f172a; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .chat-container::-webkit-scrollbar { width: 6px; }
-        .chat-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .chat-container::-webkit-scrollbar { width: 5px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="text-slate-200 min-h-screen flex flex-col">
 
-    <!-- Header -->
     <header class="p-4 glass sticky top-0 z-50 flex justify-between items-center px-6">
         <div>
             <h1 class="text-2xl font-bold tracking-widest text-white">EUREKA</h1>
-            <p class="text-[10px] text-blue-400 mono tracking-tighter">ENTORNO DE UNIFICACIÓN RACIONAL</p>
+            <p class="text-[10px] text-blue-400 mono tracking-tighter uppercase">Entorno de Unificación Racional</p>
         </div>
         <div id="auth-section">
             <button id="login-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-full text-sm font-bold transition-all transform hover:scale-105 shadow-lg shadow-blue-900/20">
@@ -31,132 +32,79 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col max-w-4xl w-full mx-auto p-4 md:p-6 overflow-hidden">
-        
-        <!-- Welcome / Info -->
-        <div id="welcome-msg" class="mb-6 text-center">
-            <h2 class="text-xl font-light text-slate-400">Hola. Soy <span class="text-blue-400 font-bold">STAY</span>.</h2>
-            <p class="text-sm text-slate-500">Tu nexo con la Física y Química del CBC (UBA XXI).</p>
-        </div>
-
-        <!-- Chat Box -->
+    <main class="flex-1 flex flex-col max-w-4xl w-full mx-auto p-4 overflow-hidden">
         <div id="chat-box" class="chat-container flex-1 overflow-y-auto space-y-6 mb-4 pr-2">
-            <!-- STAY Message -->
             <div class="flex flex-col items-start">
                 <span class="text-[10px] text-blue-500 mono mb-1">... - .- -.-- (STAY)</span>
-                <div class="glass p-4 rounded-2xl rounded-tl-none max-w-[85%] text-sm leading-relaxed border-l-4 border-blue-500">
-                    Bienvenido al sistema. Para comenzar a resolver ejercicios, por favor iniciá sesión. <br><br>
-                    Recordá que mi base de datos está optimizada para temas de: 
-                    <ul class="list-disc ml-5 mt-2 opacity-80">
-                        <li>Sistemas Materiales y Estequiometría.</li>
-                        <li>Gases Ideales y Soluciones.</li>
-                        <li>Cinemática y Dinámica.</li>
-                    </ul>
+                <div class="glass p-4 rounded-2xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500">
+                    Sincronización pendiente. Por favor, iniciá sesión para acceder al nexo de Física y Química.
                 </div>
             </div>
         </div>
 
-        <!-- Input Area -->
         <div id="input-area" class="opacity-50 pointer-events-none transition-opacity duration-300">
             <div class="relative">
                 <input type="text" id="user-input" placeholder="Escribí tu consulta técnica aquí..." 
-                       class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-slate-500">
+                       class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-slate-500">
                 <button id="send-btn" class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-500 px-4 rounded-xl transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                     </svg>
                 </button>
             </div>
-            <p class="text-[10px] text-center text-slate-600 mt-2 mono uppercase">EUREKA SYSTEM v1.0.0 | POWERED BY GROQ</p>
         </div>
     </main>
 
     <script>
-        // CONFIGURACIÓN DE FIREBASE (A completar por el usuario)
+        // CONFIGURACIÓN CORREGIDA
         const firebaseConfig = {
             apiKey: "AIzaSyCGTT2IwpD_L415hHW26UsCAp5PdjfEDqg",
             authDomain: "eureka-tutor.firebaseapp.com",
             projectId: "eureka-tutor",
             storageBucket: "eureka-tutor.firebasestorage.app",
             messagingSenderId: "305479110536",
-            appId: "1:305479110536:web:6d4783301d188d1b30743d"
+            appId: "1:305479110536:web:6d4783301d188d1b30743d",
             measurementId: "G-84Q9DKW869"
         };
 
-        // Inicializar Firebase solo si las credenciales están presentes
-        if (firebaseConfig.apiKey !== "TU_API_KEY") {
-            firebase.initializeApp(firebaseConfig);
-        }
-
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
         const loginBtn = document.getElementById('login-btn');
         const inputArea = document.getElementById('input-area');
-        const authSection = document.getElementById('auth-section');
         const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
+        const authSection = document.getElementById('auth-section');
 
-        // Login Logic
-        loginBtn.addEventListener('click', async () => {
+        // Lógica de Login
+        loginBtn.onclick = async () => {
             try {
                 const result = await auth.signInWithPopup(provider);
                 const user = result.user;
-                onLoginSuccess(user);
+                
+                // Actualizar UI tras login
+                authSection.innerHTML = `<img src="${user.photoURL}" class="w-10 h-10 rounded-full border-2 border-blue-500 shadow-lg shadow-blue-500/20">`;
+                inputArea.classList.remove('opacity-50', 'pointer-events-none');
+                
+                addStayMessage(`Sincronización establecida. Hola ${user.displayName.split(' ')[0]}, soy STAY. El nexo está activo para tus consultas de Física y Química.`);
             } catch (error) {
                 console.error("Error en login:", error);
-                alert("Para usar EUREKA debés ingresar con Google.");
+                alert("Hubo un problema al conectar con Google. Verificá los dominios autorizados en Firebase.");
             }
-        });
-
-        function onLoginSuccess(user) {
-            authSection.innerHTML = `<div class="flex items-center gap-3">
-                <span class="text-xs font-bold text-slate-400 hidden md:block">${user.displayName.toUpperCase()}</span>
-                <img src="${user.photoURL}" class="w-8 h-8 rounded-full border border-blue-500">
-            </div>`;
-            inputArea.classList.remove('opacity-50', 'pointer-events-none');
-            addStayMessage(`Sincronización establecida. Hola ${user.displayName.split(' ')[0]}, el nexo está activo. ¿En qué ejercicio te puedo ayudar?`);
-        }
+        };
 
         function addStayMessage(text) {
-            const msg = document.createElement('div');
-            msg.className = 'flex flex-col items-start';
-            msg.innerHTML = `
+            const div = document.createElement('div');
+            div.className = 'flex flex-col items-start';
+            div.innerHTML = `
                 <span class="text-[10px] text-blue-500 mono mb-1">... - .- -.-- (STAY)</span>
-                <div class="glass p-4 rounded-2xl rounded-tl-none max-w-[85%] text-sm leading-relaxed border-l-4 border-blue-500">
+                <div class="glass p-4 rounded-2xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500">
                     ${text}
                 </div>`;
-            chatBox.appendChild(msg);
+            chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
-
-        function addUserMessage(text) {
-            const msg = document.createElement('div');
-            msg.className = 'flex justify-end';
-            msg.innerHTML = `<div class="bg-blue-600 p-3 px-5 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-xl shadow-blue-900/20">${text}</div>`;
-            chatBox.appendChild(msg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        // Simulación de llamada a Groq
-        async function handleSend() {
-            const text = userInput.value.trim();
-            if(!text) return;
-
-            addUserMessage(text);
-            userInput.value = '';
-
-            // Próximo paso: Integrar API de Groq
-            setTimeout(() => {
-                addStayMessage("Recibido. Estoy analizando las variables del ejercicio según los contenidos del CBC UBA XXI. (Implementando conexión con Groq...)");
-            }, 1000);
-        }
-
-        sendBtn.addEventListener('click', handleSend);
-        userInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSend(); });
-
     </script>
 </body>
 </html>
