@@ -56,7 +56,12 @@
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // ── UI helpers ──────────────────────────────────────────────────────────
+        // ── UI ──────────────────────────────────────────────────────────────────
+        function renderWelcome(text) {
+            const el = document.getElementById('welcome-msg');
+            if (el) el.innerHTML = marked.parse(text);
+        }
+
         function setAuthUI(user) {
             const authArea  = document.getElementById('auth-area');
             const inputArea = document.getElementById('input-area');
@@ -73,7 +78,7 @@
                         </button>
                     </div>`;
                 document.getElementById('logout-btn').onclick = () =>
-                    auth.signOut().then(() => location.reload());
+                    auth.signOut();
                 inputArea.classList.remove('opacity-50', 'pointer-events-none');
                 renderWelcome('¡Sincronizado! Hola **' + firstName + '**, soy STAY. El nexo de **Física y Química** está listo.');
             } else {
@@ -82,29 +87,16 @@
                         class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">
                         CONECTAR
                     </button>`;
-                document.getElementById('login-btn').onclick = () => {
-                    renderWelcome('Redirigiendo a Google...');
-                auth.signInWithPopup(provider).catch(err => {
-                    console.error('Login error:', err);
-                    renderWelcome('Error: ' + err.message);
-                });
-                };
+                document.getElementById('login-btn').onclick = () =>
+                    auth.signInWithPopup(provider).catch(err =>
+                        renderWelcome('⚠️ Error de login: ' + err.message)
+                    );
                 inputArea.classList.add('opacity-50', 'pointer-events-none');
                 renderWelcome('Hola. Por favor **Conectá tu cuenta** para empezar.');
             }
         }
 
-        function renderWelcome(text) {
-            const el = document.getElementById('welcome-msg');
-            if (el) el.innerHTML = marked.parse(text);
-        }
-
-        // ── Auth ────────────────────────────────────────────────────────────────
-        auth.getRedirectResult().catch(err => {
-            console.error('Redirect result error:', err);
-            renderWelcome('⚠️ Error de autenticación: ' + err.message);
-        });
-
+        // ── Auth: SOLO onAuthStateChanged, sin getRedirectResult ────────────────
         auth.onAuthStateChanged(user => setAuthUI(user));
 
         // ── Chat ────────────────────────────────────────────────────────────────
@@ -128,13 +120,11 @@
 
         function showTyping() {
             removeTyping();
-            const box = document.getElementById('chat-box');
-            const el  = document.createElement('div');
+            const el = document.createElement('div');
             el.id = 'typing-indicator';
             el.className = "text-xs text-blue-500 font-bold ml-2 animate-pulse";
             el.innerText = "STAY está pensando...";
-            box.appendChild(el);
-            box.scrollTop = box.scrollHeight;
+            document.getElementById('chat-box').appendChild(el);
         }
 
         function removeTyping() {
@@ -155,14 +145,18 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: text })
                 });
-                if (!res.ok) throw new Error('HTTP ' + res.status + ' - ' + res.statusText);
                 const data = await res.json();
                 removeTyping();
+                // Manejo explícito de error de Groq
+                if (data.error) {
+                    addMessage('⚠️ Error de Groq: ' + data.error.message);
+                    return;
+                }
                 addMessage(data.choices[0].message.content);
             } catch (e) {
                 removeTyping();
                 console.error('Worker error:', e);
-                addMessage('⚠️ Error del nexo: ' + e.message);
+                addMessage('⚠️ Error de conexión: ' + e.message);
             }
         }
 
