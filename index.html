@@ -123,7 +123,7 @@
 
         // --- GROQ API (Proxy via Worker) ---
         async function askGroq(question) {
-            const WORKER_URL = "eureka-proxy.fisicai-eureka-01.workers.dev"; // <--- NO TE OLVIDES DE PEGAR TU URL REAL
+            const WORKER_URL = "https://eureka-proxy.fisicai-eureka-01.workers.dev"; // <--- NO TE OLVIDES DE PEGAR TU URL REAL
             const response = await fetch(WORKER_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -136,8 +136,14 @@
         function addStayMessage(text) {
             const div = document.createElement('div');
             div.className = 'flex flex-col items-start fade-in';
-            div.innerHTML = `<span class="text-[10px] text-blue-500 font-bold mb-1 ml-2 uppercase">Stay // Nexo</span>
-                             <div class="chat-bubble-stay p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm shadow-sm">${text}</div>`;
+            
+            // Usamos marked.parse para que interprete el texto de la IA
+            div.innerHTML = `
+                <span class="text-[10px] text-blue-500 font-bold mb-1 ml-2 uppercase">Stay // Nexo</span>
+                <div class="chat-bubble-stay p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
+                    ${marked.parse(text)}
+                </div>`;
+            
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
