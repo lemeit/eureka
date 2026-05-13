@@ -227,6 +227,46 @@
             .msg-row.user{max-width:88%;}
             .msg-row.stay{max-width:96%;}
         }
+
+        /* ── MENSAJES INTERNOS ── */
+        .msg-system-bubble{background:var(--green-light);border:1px solid #86efac;border-radius:var(--radius);padding:14px 16px;max-width:520px;align-self:flex-start;}
+        .msg-system-bubble h3{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px;}
+        .msg-system-bubble p{font-size:13px;line-height:1.55;}
+        .msg-input-wrap{margin-top:10px;display:flex;gap:6px;}
+        .msg-input-wrap textarea{flex:1;border:1.5px solid #86efac;border-radius:8px;padding:7px 10px;font-size:12px;font-family:'DM Sans',sans-serif;resize:none;outline:none;background:#fff;min-height:60px;}
+        .msg-input-wrap button{background:var(--green);color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Space Mono',monospace;white-space:nowrap;}
+        .msg-reply{background:#f0fdf4;border-left:3px solid var(--green);padding:8px 10px;border-radius:6px;margin-top:8px;font-size:12px;color:var(--text);}
+        .msg-reply strong{font-size:10px;color:var(--green);display:block;margin-bottom:3px;font-family:'Space Mono',monospace;}
+
+        /* ── POPUP FLOTANTE ── */
+        #float-popup{
+            position:fixed;bottom:80px;right:16px;
+            background:var(--surface);border:1px solid var(--border);
+            border-radius:var(--radius);box-shadow:var(--shadow-lg);
+            padding:14px 16px;max-width:260px;width:260px;
+            display:none;z-index:300;
+        }
+        #float-popup.show{display:block;animation:slideUp .3s ease;}
+        @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        #float-popup .fp-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);line-height:1;}
+        #float-popup .fp-avatar{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;color:#fff;font-size:13px;margin-bottom:8px;}
+        #float-popup p{font-size:12px;line-height:1.55;color:var(--text);margin-bottom:10px;}
+        #float-popup .fp-btns{display:flex;flex-direction:column;gap:5px;}
+        .fp-btn{font-size:11px;font-weight:700;padding:7px 10px;border-radius:7px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;text-align:center;text-decoration:none;display:block;transition:opacity .15s;}
+        .fp-btn:hover{opacity:.85;}
+        .fp-btn.primary{background:var(--accent);color:#fff;}
+        .fp-btn.wa{background:#25d366;color:#fff;}
+
+        /* ── CRÉDITOS EXTRA ── */
+        .credits-banner{background:var(--accent-light);border:1.5px solid var(--accent);border-radius:var(--radius);padding:14px 16px;max-width:520px;align-self:flex-start;}
+        .credits-banner h3{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+        .credits-banner p{font-size:12px;line-height:1.55;color:var(--text);margin-bottom:10px;}
+        .credits-banner .cb-btns{display:flex;gap:7px;flex-wrap:wrap;}
+        .cb-btn{font-size:11px;font-weight:700;padding:7px 12px;border-radius:7px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-block;transition:opacity .15s;}
+        .cb-btn:hover{opacity:.85;}
+        .cb-btn.wa{background:#25d366;color:#fff;}
+        .cb-btn.msg{background:var(--accent);color:#fff;}
+
     </style>
 </head>
 <body>
@@ -245,8 +285,10 @@
     <button class="subj-btn active" data-subj="fisica">⚛ Física</button>
     <button class="subj-btn" data-subj="quimica">⚗ Química</button>
     <button class="subj-btn" data-subj="fisq">🔬 Fisicoquímica</button>
-    <button class="subj-btn" data-subj="carbono">🧬 Q. Carbono</button>
-    <button class="subj-btn" data-subj="ingreso">📐 Ingreso</button>
+    <button class="subj-btn" data-subj="carbono">🧬 Qca. Carbono</button>
+    <button class="subj-btn" data-subj="biofisica">🧫 Biofísica</button>
+    <button class="subj-btn" data-subj="ingreso">🎓 Ingreso univ.</button>
+    <button class="subj-btn" id="clear-btn" onclick="clearChat()" style="margin-left:auto;color:var(--muted);" title="Limpiar conversación">↺ Limpiar</button>
 </div>
 
 <!-- LOGIN -->
@@ -290,13 +332,26 @@
     </div>
 </div>
 
+<!-- POPUP FLOTANTE -->
+<div id="float-popup">
+    <button class="fp-close" onclick="closePopup()">×</button>
+    <div class="fp-avatar">E</div>
+    <p>¿Tenés dudas o no te sale algún ejercicio?<br>Podés tomar <strong>clases particulares</strong> online o presenciales.</p>
+    <div class="fp-btns">
+        <a class="fp-btn wa" href="https://wa.me/5492344546609?text=Hola,%20vi%20EUREKA%20y%20quiero%20info%20sobre%20clases" target="_blank">
+            WhatsApp
+        </a>
+        <button class="fp-btn primary" onclick="closePopup();showMsgPanel()">Dejar un mensaje</button>
+    </div>
+</div>
+
 <!-- INPUT -->
 <div id="input-area" style="display:none">
     <div class="input-row">
         <button id="upload-btn" title="Subir texto/enunciado (1 vez por día)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
-        <input type="file" id="file-input" accept=".txt,.md,.text,text/plain" style="display:none">
+        <input type="file" id="file-input" accept=".txt,.md,.pdf,.png,.jpg,.jpeg,image/png,image/jpeg,application/pdf" style="display:none">
         <textarea id="user-input" placeholder="Escribí tu consulta…" rows="1"></textarea>
         <button id="send-btn" title="Enviar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -308,21 +363,36 @@
 <script>
 // ── CONSTANTES ──────────────────────────────────────────────────────────────
 const WORKER_URL  = "https://eureka-proxy.fisicai-eureka-01.workers.dev";
-const MAX_QUERIES = 3;   // consultas de texto por día
+const MAX_QUERIES = 5;   // consultas de texto por día
 const MAX_UPLOADS = 1;   // subidas de archivo por día
 const ADMIN_EMAIL = "fisicai.eureka.01@gmail.com";
 
 const SUBJ_LABELS = {
     fisica:'Física', quimica:'Química', fisq:'Fisicoquímica',
-    carbono:'Q. del Carbono', ingreso:'Ingreso'
+    carbono:'Qca. del Carbono', biofisica:'Biofísica', ingreso:'Curso de ingreso'
 };
 
+const SOCRATIC_SUFFIX = `
+
+Estilo pedagógico OBLIGATORIO:
+1. Primero explicá brevemente el concepto clave necesario para resolver el problema (2-3 oraciones).
+2. Mostrá el desarrollo paso a paso, numerado.
+3. Al finalizar la resolución, hacé UNA sola pregunta socrática al alumno para verificar comprensión o invitarlo a reflexionar sobre el método. Ejemplos: "¿Por qué creés que usamos esa fórmula y no la otra?", "¿Qué pasaría si la temperatura fuera el doble?", "¿Podés identificar qué tipo de movimiento es este?". La pregunta debe ser concreta, relacionada con el ejercicio resuelto.
+4. No hagas más de una pregunta al final.`;
+
 const SUBJ_PROMPTS = {
-    fisica:   'Sos STAY, tutor experto en Física (nivel secundario y universitario). Respondé paso a paso en español. Usá notación LaTeX para fórmulas: inline con $...$ y bloque con $$...$$. Explicá conceptos antes de resolver. Sé preciso y claro.',
-    quimica:  'Sos STAY, tutor experto en Química (nivel secundario, CBC, UBA XXI). Respondé paso a paso en español. Usá LaTeX para fórmulas químicas y ecuaciones: inline $...$ y bloque $$...$$. Balanceá ecuaciones si corresponde, usá nomenclatura IUPAC.',
-    fisq:     'Sos STAY, tutor experto en Fisicoquímica. Respondé paso a paso en español. Usá LaTeX para todas las ecuaciones: $...$ inline, $$...$$ en bloque. Incluí unidades, fundamentos termodinámicos y cinéticos cuando corresponda.',
-    carbono:  'Sos STAY, tutor experto en Química Orgánica y Química del Carbono (nivel secundario y CBC). Respondé paso a paso en español. Usá LaTeX para estructuras y fórmulas cuando sea posible. Explicá grupos funcionales, nomenclatura IUPAC y reacciones orgánicas claramente.',
-    ingreso:  'Sos STAY, tutor experto para exámenes de ingreso universitario (CBC UBA, UBA XXI, UTN, UNLP, UNICEN). Respondé paso a paso en español. Usá LaTeX para fórmulas: $...$ inline y $$...$$ en bloque. Enfocate en los temas típicos de ingreso: cinemática, dinámica, termodinámica básica, estequiometría, gases y soluciones.'
+    fisica:   \`Sos STAY, tutor experto en Física (nivel secundario y universitario). Respondé en español. Usá LaTeX para fórmulas: inline $...$ y bloque $$...$$. Sé preciso y claro.\${SOCRATIC_SUFFIX}\`,
+    quimica:  \`Sos STAY, tutor experto en Química (nivel secundario, CBC, UBA XXI). Respondé en español. Usá LaTeX para ecuaciones: $...$ inline y $$...$$ en bloque. Balanceá ecuaciones si corresponde, usá nomenclatura IUPAC.\${SOCRATIC_SUFFIX}\`,
+    fisq:     \`Sos STAY, tutor experto en Fisicoquímica. Respondé en español. Usá LaTeX: $...$ inline, $$...$$ en bloque. Incluí unidades y fundamentos termodinámicos cuando corresponda.\${SOCRATIC_SUFFIX}\`,
+    carbono:  \`Sos STAY, tutor experto en Química Orgánica y Qca. del Carbono (nivel secundario y CBC). Respondé en español. Explicá grupos funcionales, nomenclatura IUPAC orgánica y reacciones con claridad.\${SOCRATIC_SUFFIX}\`,
+    biofisica:\`Sos STAY, tutor experto en Biofísica (nivel universitario). Respondé en español. Relacioná conceptos físicos con sistemas biológicos. Usá LaTeX para fórmulas: $...$ inline y $$...$$ en bloque.\${SOCRATIC_SUFFIX}\`,
+    ingreso:  \`Sos STAY, tutor experto para exámenes de ingreso universitario (CBC UBA, UBA XXI, UTN, UNLP, UNICEN). Respondé en español. Usá LaTeX: $...$ inline y $$...$$ en bloque. Enfocate en temas típicos de ingreso.\${SOCRATIC_SUFFIX}\`
+};
+
+// ── TOKENS POR MATERIA ───────────────────────────────────────────────────────
+const MAX_TOKENS_BY_SUBJ = {
+    fisica:1024, quimica:1024, fisq:1024,
+    carbono:2048, biofisica:1536, ingreso:1024
 };
 
 // ── FIREBASE ────────────────────────────────────────────────────────────────
@@ -514,6 +584,7 @@ function showChat(user,firstName){
     }
 
     checkAndDisableInput(user.uid);
+    initPopup();
 }
 
 async function checkAndDisableInput(uid){
@@ -573,30 +644,163 @@ function addMessage(text,isUser=false,subject=null){
     box.scrollTop=box.scrollHeight;
 }
 
-function showPromoBanner(){
+function showCreditsBanner(){
+    if(document.getElementById('credits-banner-el'))return;
     const box=document.getElementById('chat-box');
     const banner=document.createElement('div');
-    banner.className='promo-banner';
+    banner.id='credits-banner-el';
+    banner.className='credits-banner';
     banner.innerHTML=`
-        <h3>¡Agotaste tus consultas de hoy!</h3>
-        <p>¿Querés seguir aprendiendo? El Prof. Ing. <strong>Luciano Lamaita</strong> dicta clases particulares online y presenciales en Saladillo.</p>
-        <div class="promo-tags">
-            <span class="ptag">Física</span><span class="ptag">Química</span><span class="ptag">Fisicoquímica</span>
-            <span class="ptag">Q. del Carbono</span><span class="ptag">CBC · UBA XXI</span>
-            <span class="ptag">Ingreso UTN · UNLP · UNICEN</span>
-        </div>
-        <div class="promo-cta">
-            <a class="promo-btn wa" href="https://wa.me/5492344546609?text=Hola%20Luciano,%20vi%20EUREKA%20y%20quiero%20info%20sobre%20clases" target="_blank">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                WhatsApp
+        <h3>¿Querés seguir estudiando hoy?</h3>
+        <p>Tus créditos se renuevan automáticamente mañana. Si necesitás más consultas ahora, escribile al profe — puede habilitarte créditos extra.</p>
+        <div class="cb-btns">
+            <a class="cb-btn wa" href="https://wa.me/5492344546609?text=Hola,%20me%20quedé%20sin%20consultas%20en%20EUREKA%20y%20necesito%20más%20créditos" target="_blank">
+                Pedir créditos por WA
             </a>
-            <a class="promo-btn ig" href="https://instagram.com/lemeitok" target="_blank">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                @lemeitok
-            </a>
+            <button class="cb-btn msg" onclick="showMsgPanel()">Dejar un mensaje</button>
         </div>`;
     box.appendChild(banner);
     box.scrollTop=box.scrollHeight;
+}
+
+function showPromoBanner(){
+    // No mostrar duplicado
+    if(document.getElementById('promo-banner-el'))return;
+    const box=document.getElementById('chat-box');
+    const banner=document.createElement('div');
+    banner.id='promo-banner-el';
+    banner.className='promo-banner';
+    banner.innerHTML=`
+        <h3>¡Agotaste tus consultas de hoy!</h3>
+        <p>¿Querés seguir aprendiendo? Podés tomar <strong>clases particulares</strong> de Física, Química, Fisicoquímica, Qca. del Carbono, Biofísica y Cursos de ingreso (CBC · UBA XXI · UTN · UNLP · UNICEN) — online o presenciales en Saladillo.</p>
+        <div class="promo-tags">
+            <span class="ptag">Física</span><span class="ptag">Química</span><span class="ptag">Fisicoquímica</span>
+            <span class="ptag">Qca. del Carbono</span><span class="ptag">Biofísica</span>
+            <span class="ptag">CBC · UBA XXI · UTN · UNLP · UNICEN</span>
+        </div>
+        <div class="promo-cta" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <a class="promo-btn wa" href="https://wa.me/5492344546609?text=Hola,%20vi%20EUREKA%20y%20me%20interesa%20tomar%20clases%20particulares" target="_blank">
+                WhatsApp
+            </a>
+            <button class="promo-btn" style="background:var(--accent);color:#fff;border:none;cursor:pointer;"
+                onclick="showMsgPanel()">Dejar un mensaje</button>
+            <a class="promo-btn" style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:10px;"
+                href="https://instagram.com/lemeitok" target="_blank">@lemeitok</a>
+        </div>`;
+    box.appendChild(banner);
+    box.scrollTop=box.scrollHeight;
+}
+
+// ── LIMPIAR CHAT ────────────────────────────────────────────────────────────
+function clearChat(){
+    if(!confirm('¿Limpiar la conversación?'))return;
+    const box=document.getElementById('chat-box');
+    box.innerHTML='';
+    const user=auth.currentUser;
+    if(user){
+        const firstName=(user.displayName||user.email.split('@')[0]).split(' ')[0];
+        const w=document.createElement('div');
+        w.className='welcome-bubble';
+        w.innerHTML=`
+            <h3>STAY · Sistema de Apoyo y Tutoría</h3>
+            <p>Hola <strong>${'${firstName}'}</strong>, seleccioná una materia y hacé tu consulta. Tenés <strong>${'${MAX_QUERIES}'} preguntas</strong> y <strong>${'${MAX_UPLOADS}'} archivo</strong> por día.</p>
+            <div class="chip-row">
+                <span class="chip" onclick="setInput(this)">¿Qué es la segunda ley de Newton?</span>
+                <span class="chip" onclick="setInput(this)">Balancear: H₂ + O₂ → H₂O</span>
+                <span class="chip" onclick="setInput(this)">Gas ideal: despejar T de PV=nRT</span>
+                <span class="chip" onclick="setInput(this)">¿Qué es la molaridad?</span>
+            </div>`;
+        box.appendChild(w);
+        // Re-verificar cuota para restaurar estado del input
+        checkAndDisableInput(user.uid);
+    }
+}
+
+// ── PANEL DE MENSAJES ────────────────────────────────────────────────────────
+async function showMsgPanel(){
+    const user=auth.currentUser;if(!user)return;
+    const box=document.getElementById('chat-box');
+
+    // Verificar si ya hay un panel abierto
+    if(document.getElementById('msg-panel-el'))return;
+
+    // Cargar mensajes previos del usuario
+    const snap=await db.collection('messages')
+        .where('uid','==',user.uid)
+        .orderBy('timestamp','desc')
+        .limit(5)
+        .get().catch(()=>null);
+
+    const msgs=snap?snap.docs.map(d=>d.data()):[];
+    const msgsHtml=msgs.length?msgs.map(m=>`
+        <div style="margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:3px;">${'${new Date(m.timestamp?.toDate()).toLocaleDateString("es-AR")}'} — Vos</div>
+            <div style="font-size:12px;background:var(--bg);padding:7px 10px;border-radius:6px;">${escapeHtml(m.text||'')}</div>
+            ${m.reply?`<div class="msg-reply"><strong>STAY (Prof.):</strong>${escapeHtml(m.reply)}</div>`:''}
+        </div>`).join(''):'<p style="font-size:12px;color:var(--muted)">No tenés mensajes anteriores.</p>';
+
+    const panel=document.createElement('div');
+    panel.id='msg-panel-el';
+    panel.className='msg-system-bubble';
+    panel.innerHTML=`
+        <h3>✉ Mensajes con el Profe</h3>
+        <div style="max-height:160px;overflow-y:auto;margin-bottom:10px;">${msgsHtml}</div>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Dejá tu consulta y te respondemos a la brevedad.</p>
+        <div class="msg-input-wrap">
+            <textarea id="msg-text-input" placeholder="Escribí tu mensaje o consulta..." rows="2"></textarea>
+            <button onclick="sendUserMessage()">Enviar</button>
+        </div>
+        <div id="msg-status" style="font-size:11px;color:var(--green);margin-top:6px;"></div>`;
+    box.appendChild(panel);
+    box.scrollTop=box.scrollHeight;
+}
+
+async function sendUserMessage(){
+    const user=auth.currentUser;if(!user)return;
+    const inp=document.getElementById('msg-text-input');
+    const text=inp.value.trim();
+    if(!text)return;
+    const statusEl=document.getElementById('msg-status');
+    statusEl.textContent='Enviando…';
+    try{
+        await db.collection('messages').add({
+            uid:user.uid,
+            email:user.email,
+            name:user.displayName||'',
+            text:text,
+            reply:'',
+            read:false,
+            timestamp:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        inp.value='';
+        statusEl.textContent='✓ Mensaje enviado. Te respondemos a la brevedad.';
+        statusEl.style.color='var(--green)';
+    }catch(e){
+        statusEl.textContent='Error al enviar: '+e.message;
+        statusEl.style.color='var(--red)';
+    }
+}
+
+// ── POPUP FLOTANTE ───────────────────────────────────────────────────────────
+let popupShown=false;
+function initPopup(){
+    // Mostrar popup después de 45 segundos si el usuario está logueado y no lo cerró
+    setTimeout(()=>{
+        if(auth.currentUser&&!popupShown){
+            const pop=document.getElementById('float-popup');
+            if(pop){pop.classList.add('show');popupShown=true;}
+        }
+    },45000);
+    // También mostrar si el usuario lleva 3+ minutos sin enviar preguntas
+    setTimeout(()=>{
+        if(auth.currentUser&&!popupShown){
+            const pop=document.getElementById('float-popup');
+            if(pop){pop.classList.add('show');popupShown=true;}
+        }
+    },180000);
+}
+function closePopup(){
+    document.getElementById('float-popup')?.classList.remove('show');
 }
 
 function showTyping(){
@@ -643,7 +847,8 @@ async function handleSend(){
     const text=inp.value.trim();if(!text)return;
     const d=await getUserData(user.uid);
     if(d.queriesUsed>=MAX_QUERIES){
-        addMessage('⚠️ Alcanzaste el límite de '+MAX_QUERIES+' consultas por hoy.',false,currentSubject);
+        addMessage('⚠️ Alcanzaste el límite de '+MAX_QUERIES+' consultas por hoy. Volvé mañana o contactá al profe para créditos extra.',false,currentSubject);
+        showCreditsBanner();
         showPromoBanner();return;
     }
     addMessage(text,true);
@@ -658,12 +863,31 @@ async function handleSend(){
     sendToGroq(user,text,currentSubject,false);
 }
 
+// Clasifica automáticamente el tema si el alumno no cambió de la pestaña por defecto
+// Solo se usa para logging — la respuesta se da igual
+async function classifySubject(text){
+    try{
+        const res=await fetch(WORKER_URL,{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+                question:text,
+                max_tokens:10,
+                system:'Clasificá el siguiente texto en UNA de estas categorías (respondé SOLO la palabra): fisica, quimica, fisq, carbono, biofisica, ingreso. Si no pertenece claramente a ninguna, respondé "fisica".'
+            })
+        });
+        const data=await res.json();
+        const raw=(data.choices?.[0]?.message?.content||'').trim().toLowerCase();
+        const valid=['fisica','quimica','fisq','carbono','biofisica','ingreso'];
+        return valid.includes(raw)?raw:null;
+    }catch(e){return null;}
+}
+
 async function sendToGroq(user,text,subj,isUpload){
     showTyping();
     try{
         const res=await fetch(WORKER_URL,{
             method:"POST",headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({question:text,system:SUBJ_PROMPTS[subj]})
+            body:JSON.stringify({question:text,system:SUBJ_PROMPTS[subj],max_tokens:MAX_TOKENS_BY_SUBJ[subj]||1024})
         });
 
         // Si el worker devuelve error JSON (no stream)
@@ -701,6 +925,7 @@ async function sendToGroq(user,text,subj,isUpload){
         const decoder=new TextDecoder();
         let fullText='';
         let buffer='';
+        let lastUsage=null;
 
         while(true){
             const{done,value}=await reader.read();
@@ -715,6 +940,7 @@ async function sendToGroq(user,text,subj,isUpload){
                 if(data==='[DONE]')break;
                 try{
                     const parsed=JSON.parse(data);
+                    if(parsed.usage)lastUsage=parsed.usage;
                     const delta=parsed.choices?.[0]?.delta?.content||'';
                     if(delta){
                         fullText+=delta;
@@ -730,9 +956,11 @@ async function sendToGroq(user,text,subj,isUpload){
         renderLatex(bubble);
         box.scrollTop=box.scrollHeight;
 
-        // Estimar tokens (aprox 4 chars = 1 token)
-        const tokens=Math.round((text.length+fullText.length)/4);
-        logQuery(user,text,subj,tokens,isUpload).catch(console.error);
+        // Tokens exactos del último chunk SSE de Groq
+        const tokens = lastUsage ? (lastUsage.total_tokens || 0) : Math.round((text.length+fullText.length)/4);
+        // Clasificación automática para estadísticas si el tema es el default
+        const detectedSubj = await classifySubject(text).catch(()=>null);
+        logQuery(user,text,detectedSubj||subj,tokens,isUpload).catch(console.error);
 
         // Mostrar promo si se agotaron los límites
         const d2=await getUserData(user.uid);
@@ -829,12 +1057,58 @@ async function loadAdminData(panel){
                 }).join('')}</tbody>
             </table>
         </div>
+        <div class="admin-section" id="admin-messages-section">
+            <h3>Mensajes de alumnos</h3>
+            <div id="admin-msgs-content">Cargando mensajes...</div>
+        </div>
         <div style="padding-bottom:20px;text-align:center;">
             <button class="btn-link" onclick="showChatFromAdmin()">← Volver al chat</button>
         </div>`;
+    // Cargar mensajes
+    try{
+        const msgSnap=await db.collection('messages').orderBy('timestamp','desc').limit(30).get();
+        const msgs=msgSnap.docs.map(d=>({id:d.id,...d.data()}));
+        const msgsEl=document.getElementById('admin-msgs-content');
+        if(msgsEl){
+            if(msgs.length===0){msgsEl.innerHTML='<p style="font-size:12px;color:var(--muted)">Sin mensajes aún.</p>';}
+            else{
+                msgsEl.innerHTML=msgs.map(m=>{
+                    const ts=m.timestamp?.toDate();
+                    const hora=ts?ts.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+                    return`<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--bg);">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                            <span style="font-size:11px;font-weight:600;">${escapeHtml(m.name||m.email||'—')}</span>
+                            <span style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;">${hora}</span>
+                        </div>
+                        <div style="font-size:12px;margin-bottom:8px;">${escapeHtml(m.text||'')}</div>
+                        ${m.reply?`<div style="background:#f0fdf4;border-left:3px solid var(--green);padding:6px 8px;font-size:11px;border-radius:4px;"><strong style='color:var(--green);'>Tu respuesta:</strong> ${escapeHtml(m.reply)}</div>`:''}
+                        ${!m.reply?`<div style="display:flex;gap:6px;margin-top:6px;">
+                            <input type="text" id="reply-${m.id}" placeholder="Escribí tu respuesta..." style="flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;">
+                            <button onclick="sendAdminReply('${m.id}','${escapeHtml(m.email||'')}')" style="background:var(--accent);color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Responder</button>
+                        </div>`:''}
+                    </div>`;
+                }).join('');
+            }
+        }
+    }catch(e2){
+        const el=document.getElementById('admin-msgs-content');
+        if(el)el.innerHTML='<p style="font-size:11px;color:var(--red)">Error cargando mensajes: '+e2.message+'</p>';
+    }
     }catch(e){
         panel.innerHTML=`<div style="padding:40px;text-align:center;color:var(--red)">Error: ${e.message}</div>`;
     }
+}
+
+async function sendAdminReply(msgId, userEmail){
+    const inp=document.getElementById('reply-'+msgId);
+    if(!inp)return;
+    const reply=inp.value.trim();
+    if(!reply)return;
+    try{
+        await db.collection('messages').doc(msgId).update({reply,repliedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        alert('Respuesta guardada. El alumno la verá la próxima vez que abra el chat.');
+        showAdminPanel(); // reload
+    }catch(e){alert('Error: '+e.message);}
 }
 
 function showChatFromAdmin(){
