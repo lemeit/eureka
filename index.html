@@ -17,14 +17,13 @@
     </style>
 </head>
 <body class="flex flex-col h-screen">
+
     <header class="bg-white border-b p-4 flex justify-between items-center shadow-sm">
         <div class="flex items-center gap-2">
             <div class="bg-blue-600 text-white w-8 h-8 rounded flex items-center justify-center font-bold">E</div>
             <h1 class="font-bold text-xl text-blue-900">EUREKA</h1>
         </div>
-        <div id="auth-area">
-            <button id="login-btn" class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm">CONECTAR</button>
-        </div>
+        <div id="auth-area"></div>
     </header>
 
     <main class="flex-1 max-w-3xl w-full mx-auto p-4 overflow-hidden">
@@ -57,115 +56,117 @@
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // ── Auth state ──────────────────────────────────────────────────────────
-        auth.onAuthStateChanged(user => {
+        // ── UI helpers ──────────────────────────────────────────────────────────
+        function setAuthUI(user) {
             const authArea  = document.getElementById('auth-area');
             const inputArea = document.getElementById('input-area');
 
             if (user) {
+                const firstName = (user.displayName || 'usuario').split(' ')[0];
                 authArea.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <img src="${user.photoURL}" class="w-8 h-8 rounded-full border" alt="avatar">
+                        <img src="${user.photoURL || ''}" class="w-8 h-8 rounded-full border" alt="avatar">
+                        <span class="text-sm font-semibold text-slate-700">${firstName}</span>
                         <button id="logout-btn"
                             class="text-xs font-bold text-red-600 border border-red-200 px-2 py-1 rounded hover:bg-red-50">
                             SALIR
                         </button>
                     </div>`;
-
-                // logout-btn se acaba de crear, buscarlo acá
                 document.getElementById('logout-btn').onclick = () =>
                     auth.signOut().then(() => location.reload());
-
                 inputArea.classList.remove('opacity-50', 'pointer-events-none');
-
-                const firstName = user.displayName ? user.displayName.split(' ')[0] : 'usuario';
-                renderWelcome(`¡Sincronizado! Hola **${firstName}**, soy STAY. El nexo de **Física y Química** está listo.`);
+                renderWelcome('¡Sincronizado! Hola **' + firstName + '**, soy STAY. El nexo de **Física y Química** está listo.');
             } else {
+                authArea.innerHTML = `
+                    <button id="login-btn"
+                        class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">
+                        CONECTAR
+                    </button>`;
+                document.getElementById('login-btn').onclick = () => {
+                    renderWelcome('Redirigiendo a Google...');
+                    auth.signInWithRedirect(provider).catch(err => {
+                        console.error('Login error:', err);
+                        renderWelcome('Error al iniciar sesión: ' + err.message);
+                    });
+                };
                 inputArea.classList.add('opacity-50', 'pointer-events-none');
-                renderWelcome("Hola. Por favor **Conectá tu cuenta** para empezar.");
-                authArea.innerHTML = `<button id="login-btn"
-                    class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm">CONECTAR</button>`;
-                document.getElementById('login-btn').onclick = () =>
-                    auth.signInWithPopup(provider).catch(err => console.error('Login error:', err));
+                renderWelcome('Hola. Por favor **Conectá tu cuenta** para empezar.');
             }
-        });
+        }
 
-        // primer login-btn (antes de que Firebase resuelva el estado)
-        document.getElementById('login-btn').onclick = () =>
-            auth.signInWithPopup(provider).catch(err => console.error('Login error:', err));
-
-        // ── Render helpers ───────────────────────────────────────────────────────
         function renderWelcome(text) {
             const el = document.getElementById('welcome-msg');
             if (el) el.innerHTML = marked.parse(text);
         }
 
-        function addMessage(text, isUser = false) {
-            const div   = document.createElement('div');
-            div.className = isUser ? "flex justify-end" : "flex justify-start";
+        // ── Auth ────────────────────────────────────────────────────────────────
+        auth.getRedirectResult().catch(err => {
+            console.error('Redirect result error:', err);
+            renderWelcome('⚠️ Error de autenticación: ' + err.message);
+        });
 
+        auth.onAuthStateChanged(user => setAuthUI(user));
+
+        // ── Chat ────────────────────────────────────────────────────────────────
+        function escapeHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function addMessage(text, isUser = false) {
+            const box  = document.getElementById('chat-box');
+            const wrap = document.createElement('div');
+            wrap.className = isUser ? "flex justify-end" : "flex justify-start";
             const inner = document.createElement('div');
             inner.className = isUser
                 ? "bg-blue-600 text-white p-3 rounded-lg max-w-[85%] whitespace-pre-wrap"
                 : "bubble-stay max-w-[85%]";
             inner.innerHTML = isUser ? escapeHtml(text) : marked.parse(text);
-
-            div.appendChild(inner);
-            const box = document.getElementById('chat-box');
-            box.appendChild(div);
+            wrap.appendChild(inner);
+            box.appendChild(wrap);
             box.scrollTop = box.scrollHeight;
         }
 
-        function escapeHtml(str) {
-            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        }
-
-        function addTypingIndicator() {
-            const existing = document.getElementById('typing-indicator');
-            if (existing) existing.remove();
-            const el = document.createElement('div');
+        function showTyping() {
+            removeTyping();
+            const box = document.getElementById('chat-box');
+            const el  = document.createElement('div');
             el.id = 'typing-indicator';
             el.className = "text-xs text-blue-500 font-bold ml-2 animate-pulse";
             el.innerText = "STAY está pensando...";
-            document.getElementById('chat-box').appendChild(el);
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+            box.appendChild(el);
+            box.scrollTop = box.scrollHeight;
         }
 
-        function removeTypingIndicator() {
+        function removeTyping() {
             const el = document.getElementById('typing-indicator');
             if (el) el.remove();
         }
 
-        // ── Send ─────────────────────────────────────────────────────────────────
         async function handleSend() {
-            const input = document.getElementById('user-input');
-            const text  = input.value.trim();
+            const userInput = document.getElementById('user-input');
+            const text = userInput.value.trim();
             if (!text) return;
-
             addMessage(text, true);
-            input.value = '';
-            addTypingIndicator();
-
+            userInput.value = '';
+            showTyping();
             try {
-                const response = await fetch(WORKER_URL, {
+                const res = await fetch(WORKER_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ question: text })
                 });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                removeTypingIndicator();
+                if (!res.ok) throw new Error('HTTP ' + res.status + ' - ' + res.statusText);
+                const data = await res.json();
+                removeTyping();
                 addMessage(data.choices[0].message.content);
             } catch (e) {
-                removeTypingIndicator();
-                console.error('Fetch error:', e);
-                addMessage("⚠️ Hubo un error en el nexo. Revisá la consola.");
+                removeTyping();
+                console.error('Worker error:', e);
+                addMessage('⚠️ Error del nexo: ' + e.message);
             }
         }
 
         document.getElementById('send-btn').onclick = handleSend;
-
-        // ← BUG ORIGINAL: era `input.onkeypress` (variable global inexistente)
         document.getElementById('user-input').addEventListener('keypress', e => {
             if (e.key === 'Enter') handleSend();
         });
