@@ -4,57 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUREKA</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        /* FUERZA LAS NEGRITAS EN AZUL */
-        .chat-bubble-stay strong, .chat-bubble-stay b { font-weight: 800 !important; color: #3b82f6 !important; }
-        .chat-scroll { height: calc(100vh - 220px); overflow-y: auto; scroll-behavior: smooth; }
+        /* MODO CLARO POR DEFECTO */
+        body { background-color: #f8fafc; color: #1e293b; font-family: sans-serif; }
+        .chat-container { height: calc(100vh - 180px); overflow-y: auto; }
+        .bubble-stay { background: white; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 0.5rem; shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        /* Estilo para que las negritas se vean */
+        .bubble-stay strong, .bubble-stay b { font-weight: bold; color: #1d4ed8; }
     </style>
 </head>
-<body class="overflow-hidden">
+<body class="p-0 m-0">
 
-    <header class="p-4 glass sticky top-0 z-50 flex justify-between items-center px-6">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-xl text-white shadow-lg">E</div>
-            <div>
-                <h1 style="font-family:'Space Grotesk'" class="text-xl font-bold tracking-tight leading-none">EUREKA</h1>
-                <p class="text-[10px] text-blue-500 font-bold tracking-widest uppercase opacity-80">Entorno de Unificación Racional</p>
-            </div>
+    <header class="bg-white border-b p-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 text-white w-8 h-8 rounded flex items-center justify-center font-bold">E</div>
+            <h1 class="font-bold text-xl">EUREKA</h1>
         </div>
-        <div id="auth-section">
-            <button id="login-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md transition-all">CONECTAR</button>
+        <div id="auth-area">
+            <button id="login-btn" class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm">CONECTAR</button>
         </div>
     </header>
 
-    <main class="max-w-4xl w-full mx-auto p-4">
-        <div id="chat-box" class="chat-scroll space-y-6 pr-2 mb-4">
-            <div class="flex flex-col items-start" id="msg-init">
-                <span class="text-[10px] text-blue-500 font-bold mb-1 ml-2 uppercase">Stay // Sistema</span>
-                <div class="glass p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500">
-                    Sincronización pendiente. Por favor, iniciá sesión para acceder al nexo de **Física y Química**.
-                </div>
+    <main class="max-w-3xl mx-auto p-4">
+        <div id="chat-box" class="chat-container space-y-4">
+            <div id="welcome-msg" class="bubble-stay">
+                Cargando sistema...
             </div>
         </div>
 
-        <div id="input-area" class="opacity-30 pointer-events-none fixed bottom-6 left-4 right-4 max-w-4xl mx-auto">
-            <div class="relative">
-                <input type="text" id="user-input" autocomplete="off" placeholder="Escribí tu consulta técnica..." 
-                       class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white shadow-xl">
-                <button id="send-btn" class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-xl">
-                    <svg xmlns="http://www.w3.org/2000/swap" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
-                </button>
+        <div id="input-area" class="fixed bottom-0 left-0 w-full bg-white p-4 border-t opacity-50 pointer-events-none">
+            <div class="max-w-3xl mx-auto flex gap-2">
+                <input type="text" id="user-input" placeholder="Escribí acá..." class="flex-1 border rounded p-2 outline-none focus:border-blue-500">
+                <button id="send-btn" class="bg-blue-600 text-white px-6 rounded font-bold">ENVIAR</button>
             </div>
         </div>
     </main>
 
     <script>
         const WORKER_URL = "https://eureka-proxy.fisicai-eureka-01.workers.dev";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyCGTT2IwpD_L415hHW26UsCAp5PdjfEDqg",
             authDomain: "eureka-tutor.firebaseapp.com",
@@ -68,77 +63,67 @@
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        auth.onAuthStateChanged((user) => {
-            if (user) updateUI(user);
+        // 1. Manejo de Inicio de Sesión y Persistencia
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('auth-area').innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold">${user.displayName.split(' ')[0]}</span>
+                        <img src="${user.photoURL}" id="logout" class="w-8 h-8 rounded-full cursor-pointer border hover:opacity-75" title="Salir">
+                    </div>`;
+                document.getElementById('input-area').classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('logout').onclick = () => auth.signOut().then(() => location.reload());
+                setInitialMessage(`Sincronizado. Hola **${user.displayName.split(' ')[0]}**, soy STAY. El nexo de **Física y Química** está listo.`);
+            } else {
+                setInitialMessage("Hola. Por favor **Iniciá Sesión** con Google para usar el tutor.");
+            }
         });
 
         document.getElementById('login-btn').onclick = () => auth.signInWithPopup(provider);
 
-        function updateUI(user) {
-            // RESTAURAMOS EL BOTÓN DE CIERRE DE SESIÓN CON TU FOTO
-            document.getElementById('auth-section').innerHTML = `
-                <div class="flex items-center gap-3">
-                    <span class="text-xs font-bold text-blue-400 hidden sm:block">${user.displayName}</span>
-                    <button id="logout-btn" class="relative group">
-                        <img src="${user.photoURL}" class="w-10 h-10 rounded-xl border-2 border-blue-500 group-hover:opacity-50 transition-all">
-                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-[10px] font-bold">SALIR</div>
-                    </button>
-                </div>`;
-            
-            document.getElementById('logout-btn').onclick = () => auth.signOut().then(() => location.reload());
-            document.getElementById('input-area').classList.remove('opacity-30', 'pointer-events-none');
-            addStayMessage(`Sincronización establecida. Hola **${user.displayName.split(' ')[0]}**, soy STAY. El nexo está activo para tus consultas de **Física y Química**.`);
+        function setInitialMessage(text) {
+            document.getElementById('welcome-msg').innerHTML = marked.parse(text);
         }
 
-        async function askGroq(question) {
-            try {
-                const response = await fetch(WORKER_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ question: question })
-                });
-                const data = await response.json();
-                return data.choices[0].message.content;
-            } catch (e) { return "Error en el nexo. Reintentá."; }
-        }
-
-        function addStayMessage(text) {
+        function addMessage(text, isUser = false) {
             const div = document.createElement('div');
-            div.className = 'flex flex-col items-start chat-bubble-stay';
-            div.innerHTML = `
-                <span class="text-[10px] text-blue-500 font-bold mb-1 ml-2 uppercase">Stay // Nexo</span>
-                <div class="glass p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500 shadow-sm">
-                    ${marked.parse(text)}
-                </div>`;
-            document.getElementById('chat-box').appendChild(div);
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
-        }
-
-        function addUserMessage(text) {
-            const div = document.createElement('div');
-            div.className = 'flex justify-end';
-            div.innerHTML = `<div class="bg-blue-600 text-white p-3 px-6 rounded-3xl rounded-tr-none max-w-[80%] text-sm shadow-md">${text}</div>`;
+            div.className = isUser ? "flex justify-end" : "flex justify-start";
+            const inner = document.createElement('div');
+            inner.className = isUser ? "bg-blue-600 text-white p-3 rounded-lg max-w-[80%]" : "bubble-stay max-w-[80%]";
+            inner.innerHTML = isUser ? text : marked.parse(text);
+            div.appendChild(inner);
             document.getElementById('chat-box').appendChild(div);
             document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
         }
 
         async function handleSend() {
-            const text = document.getElementById('user-input').value.trim();
-            if(!text) return;
-            addUserMessage(text);
-            document.getElementById('user-input').value = '';
-            
-            const typingId = 'typing-' + Date.now();
-            const typingDiv = document.createElement('div');
-            typingDiv.id = typingId;
-            typingDiv.className = 'flex flex-col items-start animate-pulse';
-            typingDiv.innerHTML = `<span class="text-[10px] text-blue-400 font-bold mb-1 ml-2 uppercase">Stay // Pensando</span>
-                                   <div class="glass p-3 rounded-2xl rounded-tl-none text-xs italic">Procesando...</div>`;
-            document.getElementById('chat-box').appendChild(typingDiv);
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text) return;
 
-            const answer = await askGroq(text);
-            document.getElementById(typingId).remove();
-            addStayMessage(answer);
+            addMessage(text, true);
+            input.value = '';
+
+            // Mostrar estado "Pensando"
+            const typing = document.createElement('div');
+            typing.id = "typing";
+            typing.className = "text-xs italic text-gray-500";
+            typing.innerText = "STAY está analizando...";
+            document.getElementById('chat-box').appendChild(typing);
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: text })
+                });
+                const data = await response.json();
+                document.getElementById('typing').remove();
+                addMessage(data.choices[0].message.content);
+            } catch (e) {
+                document.getElementById('typing').remove();
+                addMessage("Error de conexión. Chequeá que el Worker esté activo.");
+            }
         }
 
         document.getElementById('send-btn').onclick = handleSend;
