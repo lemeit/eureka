@@ -1,63 +1,79 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EUREKA - Tutor de Física y Química</title>
+    <title>EUREKA - Tutor de Exactas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
-        :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; }
-        body { font-family: 'Space Grotesk', sans-serif; background-color: var(--bg); color: #f8fafc; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-        .chat-scroll { height: calc(100vh - 180px); }
-        /* Animación suave para mensajes */
+        :root { --accent: #2563eb; }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .title-font { font-family: 'Space Grotesk', sans-serif; }
+        
+        /* MODO CLARO (Default) */
+        body.light { background-color: #f1f5f9; color: #1e293b; }
+        .light .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05); }
+        .light .chat-bubble-stay { background: white; border-left: 4px solid var(--accent); color: #334155; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .light .input-bg { background: white; border: 1px solid #e2e8f0; color: #1e293b; }
+
+        /* MODO OSCURO */
+        body.dark { background-color: #0f172a; color: #f8fafc; }
+        .dark .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); }
+        .dark .chat-bubble-stay { background: rgba(30, 41, 59, 0.5); border-left: 4px solid var(--accent); color: #e2e8f0; }
+        .dark .input-bg { background: #1e293b; border: 1px solid #334155; color: white; }
+
+        .chat-scroll { height: calc(100vh - 200px); scroll-behavior: smooth; }
         .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="overflow-hidden">
+<body class="light overflow-hidden">
 
-    <header class="p-4 glass sticky top-0 z-50 flex justify-between items-center px-6 shadow-2xl">
+    <header class="p-4 glass sticky top-0 z-50 flex justify-between items-center px-6 shadow-sm">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/20">E</div>
+            <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-blue-500/30">E</div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-white leading-none">EUREKA</h1>
-                <p class="text-[9px] text-blue-400 mono tracking-tighter uppercase opacity-80">Entorno de Unificación Racional</p>
+                <h1 class="text-xl font-bold tracking-tight leading-none title-font">EUREKA</h1>
+                <p class="text-[10px] text-blue-500 font-bold tracking-widest uppercase opacity-80">Tutor de Exactas</p>
             </div>
         </div>
         
-        <div id="auth-section" class="relative">
-            <button id="login-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg">
-                CONECTAR
+        <div class="flex items-center gap-4">
+            <button id="theme-toggle" class="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                <span id="theme-icon">🌙</span>
             </button>
-            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 glass rounded-xl shadow-2xl p-2 z-50">
-                <button id="logout-btn" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
-                    Cerrar Sesión
+
+            <div id="auth-section" class="relative">
+                <button id="login-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-md">
+                    CONECTAR
                 </button>
+                <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 glass rounded-2xl shadow-xl p-2 z-50">
+                    <button id="logout-btn" class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg font-medium transition-colors">
+                        Cerrar Sesión
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
     <main class="max-w-4xl w-full mx-auto p-4">
-        <div id="chat-box" class="chat-scroll overflow-y-auto space-y-6 pr-2 mb-4 custom-scrollbar">
+        <div id="chat-box" class="chat-scroll overflow-y-auto space-y-6 pr-2 mb-4">
             <div class="flex flex-col items-start fade-in">
-                <span class="text-[10px] text-blue-500 mono mb-1 ml-2">STAY // NEXO_ACTIVO</span>
-                <div class="glass p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500 shadow-md">
-                    Hola. El sistema está esperando autenticación. <br>Iniciá sesión para comenzar el soporte en **Física y Química**.
+                <span class="text-[10px] text-blue-500 font-bold mb-1 ml-2 uppercase">Stay // Online</span>
+                <div class="chat-bubble-stay p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm">
+                    Hola. Iniciá sesión con tu cuenta de Google para empezar a resolver tus dudas de **Física y Química**.
                 </div>
             </div>
         </div>
 
         <div id="input-area" class="opacity-30 pointer-events-none transition-all duration-500 fixed bottom-6 left-4 right-4 max-w-4xl mx-auto">
             <div class="relative group">
-                <input type="text" id="user-input" autocomplete="off" placeholder="Preguntame sobre estequiometría, gases, cinemática..." 
-                       class="w-full bg-slate-800/80 border border-slate-700 rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white shadow-2xl transition-all">
-                <button id="send-btn" class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-500 px-5 rounded-xl transition-all active:scale-95 shadow-lg">
+                <input type="text" id="user-input" autocomplete="off" placeholder="Escribí tu consulta técnica..." 
+                       class="input-bg w-full rounded-2xl p-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-xl transition-all">
+                <button id="send-btn" class="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-xl transition-all active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
                 </button>
             </div>
@@ -65,8 +81,6 @@
     </main>
 
     <script>
-        // --- CONFIG ---
-        const GROQ_API_KEY = "TU_API_KEY_ACA"; 
         const firebaseConfig = {
             apiKey: "AIzaSyCGTT2IwpD_L415hHW26UsCAp5PdjfEDqg",
             authDomain: "eureka-tutor.firebaseapp.com",
@@ -80,17 +94,20 @@
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // Elementos UI
         const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const userMenu = document.getElementById('user-menu');
+        const themeToggle = document.getElementById('theme-toggle');
         const inputArea = document.getElementById('input-area');
-        const authSection = document.getElementById('auth-section');
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
 
-        // --- AUTH LOGIC ---
+        // --- MODO CLARO/OSCURO ---
+        themeToggle.onclick = () => {
+            document.body.classList.toggle('dark');
+            document.body.classList.toggle('light');
+            document.getElementById('theme-icon').innerText = document.body.classList.contains('dark') ? '☀️' : '🌙';
+        };
+
+        // --- AUTH ---
         loginBtn.onclick = async () => {
             try {
                 const result = await auth.signInWithPopup(provider);
@@ -98,26 +115,29 @@
             } catch (e) { console.error(e); }
         };
 
-        logoutBtn.onclick = () => auth.signOut().then(() => location.reload());
-
         function updateUI(user) {
-            authSection.innerHTML = `
-                <img id="avatar" src="${user.photoURL}" class="w-10 h-10 rounded-xl border-2 border-blue-500 cursor-pointer hover:scale-105 transition-transform shadow-lg shadow-blue-500/20">
-            `;
-            // Re-vincular evento de avatar para el menú
-            document.getElementById('avatar').onclick = () => userMenu.classList.toggle('hidden');
-            authSection.appendChild(userMenu);
-            
+            document.getElementById('auth-section').innerHTML = `<img id="avatar" src="${user.photoURL}" class="w-10 h-10 rounded-xl border-2 border-blue-500 cursor-pointer shadow-md">`;
             inputArea.classList.remove('opacity-30', 'pointer-events-none');
-            addStayMessage(`¡Sincronizado! Hola **${user.displayName.split(' ')[0]}**. ¿En qué puedo ayudarte hoy?`);
+            addStayMessage(`¡Sincronizado! Hola **${user.displayName.split(' ')[0]}**. ¿Qué vamos a resolver hoy?`);
         }
 
-        // --- CHAT LOGIC ---
+        // --- GROQ API (Proxy via Worker) ---
+        async function askGroq(question) {
+            const WORKER_URL = "eureka-proxy.fisicai-eureka-01.workers.dev"; // <--- NO TE OLVIDES DE PEGAR TU URL REAL
+            const response = await fetch(WORKER_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: question })
+            });
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
         function addStayMessage(text) {
             const div = document.createElement('div');
             div.className = 'flex flex-col items-start fade-in';
-            div.innerHTML = `<span class="text-[10px] text-blue-500 mono mb-1 ml-2">STAY // RESPUESTA</span>
-                             <div class="glass p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500 shadow-lg">${text}</div>`;
+            div.innerHTML = `<span class="text-[10px] text-blue-500 font-bold mb-1 ml-2 uppercase">Stay // Nexo</span>
+                             <div class="chat-bubble-stay p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm shadow-sm">${text}</div>`;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -125,7 +145,7 @@
         function addUserMessage(text) {
             const div = document.createElement('div');
             div.className = 'flex justify-end fade-in';
-            div.innerHTML = `<div class="bg-blue-600 p-3 px-6 rounded-3xl rounded-tr-none max-w-[80%] text-sm shadow-xl">${text}</div>`;
+            div.innerHTML = `<div class="bg-blue-600 text-white p-3 px-6 rounded-3xl rounded-tr-none max-w-[80%] text-sm shadow-md">${text}</div>`;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -136,28 +156,26 @@
             addUserMessage(text);
             userInput.value = '';
             
-            // Crear el mensaje de carga de STAY
             const typingId = 'typing-' + Date.now();
             const typingDiv = document.createElement('div');
             typingDiv.id = typingId;
             typingDiv.className = 'flex flex-col items-start fade-in';
-            typingDiv.innerHTML = `<span class="text-[10px] text-blue-500 mono mb-1 ml-2">STAY // PROCESANDO...</span>
-                                   <div class="glass p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500 animate-pulse">Analizando variables...</div>`;
+            typingDiv.innerHTML = `<span class="text-[10px] text-blue-500 font-bold mb-1 ml-2 uppercase">Stay // Pensando</span>
+                                   <div class="chat-bubble-stay p-4 rounded-3xl rounded-tl-none text-xs animate-pulse italic">Analizando variables físicas y químicas...</div>`;
             chatBox.appendChild(typingDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
-        
+
             try {
                 const answer = await askGroq(text);
-                document.getElementById(typingId).remove(); // Quitar el "Procesando"
+                document.getElementById(typingId).remove();
                 addStayMessage(answer);
             } catch (e) {
                 document.getElementById(typingId).remove();
-                addStayMessage("Error de conexión con el nexo. Reintentá en unos segundos.");
-                console.error(e);
+                addStayMessage("Error en el nexo. Reintentá.");
             }
         }
 
-        sendBtn.onclick = handleSend;
+        document.getElementById('send-btn').onclick = handleSend;
         userInput.onkeypress = (e) => { if(e.key === 'Enter') handleSend(); };
     </script>
 </body>
