@@ -45,7 +45,7 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyCGTT2IwpD_L415hHW26UsCAp5PdjfEDqg",
-            authDomain: "lemeit.github.io",
+            authDomain: "eureka-tutor.firebaseapp.com",
             projectId: "eureka-tutor",
             storageBucket: "eureka-tutor.firebasestorage.app",
             messagingSenderId: "305479110536",
@@ -84,10 +84,10 @@
                     </button>`;
                 document.getElementById('login-btn').onclick = () => {
                     renderWelcome('Redirigiendo a Google...');
-                    auth.signInWithRedirect(provider).catch(err => {
-                        console.error('Login error:', err);
-                        renderWelcome('Error al iniciar sesión: ' + err.message);
-                    });
+                auth.signInWithPopup(provider).catch(err => {
+                    console.error('Login error:', err);
+                    renderWelcome('Error: ' + err.message);
+                });
                 };
                 inputArea.classList.add('opacity-50', 'pointer-events-none');
                 renderWelcome('Hola. Por favor **Conectá tu cuenta** para empezar.');
