@@ -120,18 +120,17 @@
         const response = await fetch(WORKER_URL, {
             method: "POST",
             headers: { 
-                "Content-Type": "application/json" 
-            },
-            // Aseguramos que enviamos el campo "question" que el Worker espera
+            "Content-Type": "application/json"
+        },
             body: JSON.stringify({ question: question }) 
         });
         
-        if (!response.ok) {
-            const errorData = await response.text();
-            console.error("Error del Worker:", errorData);
-            throw new Error("Error en el nexo");
+        if (!response.ok) throw new Error("Error en el nexo");
+            
+            const data = await response.json();
+            // Groq devuelve la respuesta en este formato específico:
+            return data.choices[0].message.content;
         }
-        
         const data = await response.json();
         
         // Verificamos que Groq devolvió una respuesta válida
