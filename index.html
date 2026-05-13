@@ -665,16 +665,79 @@ async function sendToGroq(user,text,subj,isUpload){
             method:"POST",headers:{"Content-Type":"application/json"},
             body:JSON.stringify({question:text,system:SUBJ_PROMPTS[subj]})
         });
-        const data=await res.json();
+
+        // Si el worker devuelve error JSON (no stream)
+        const contentType=res.headers.get('content-type')||'';
+        if(!res.ok||contentType.includes('application/json')){
+            const data=await res.json();
+            removeTyping();
+            addMessage('⚠️ Error de IA: '+(data.error?.message||'Error desconocido'),false,subj);
+            return;
+        }
+
         removeTyping();
-        if(data.error){addMessage('⚠️ Error de IA: '+data.error.message,false,subj);return;}
-        const answer=data.choices[0].message.content;
-        const tokens=data.usage?.total_tokens||0;
-        addMessage(answer,false,subj);
+
+        // Crear burbuja de respuesta vacía para ir llenando
+        const box=document.getElementById('chat-box');
+        const row=document.createElement('div');
+        row.className='msg-row stay';
+        const av=document.createElement('div');
+        av.className='msg-avatar stay-av';av.textContent='ST';
+        const bubble=document.createElement('div');
+        bubble.className='bubble stay';
+        const pill=document.createElement('div');
+        pill.className='subj-pill '+subj;
+        pill.textContent=(SUBJ_LABELS[subj]||subj).toUpperCase();
+        bubble.appendChild(pill);
+        const content=document.createElement('div');
+        content.className='stream-content';
+        bubble.appendChild(content);
+        row.appendChild(av);row.appendChild(bubble);
+        box.appendChild(row);
+        box.scrollTop=box.scrollHeight;
+
+        // Leer stream SSE
+        const reader=res.body.getReader();
+        const decoder=new TextDecoder();
+        let fullText='';
+        let buffer='';
+
+        while(true){
+            const{done,value}=await reader.read();
+            if(done)break;
+            buffer+=decoder.decode(value,{stream:true});
+            const lines=buffer.split('\n');
+            buffer=lines.pop(); // guardar línea incompleta
+
+            for(const line of lines){
+                if(!line.startsWith('data: '))continue;
+                const data=line.slice(6).trim();
+                if(data==='[DONE]')break;
+                try{
+                    const parsed=JSON.parse(data);
+                    const delta=parsed.choices?.[0]?.delta?.content||'';
+                    if(delta){
+                        fullText+=delta;
+                        // Render markdown parcial — solo texto plano durante stream
+                        content.innerHTML=marked.parse(fullText);
+                        box.scrollTop=box.scrollHeight;
+                    }
+                }catch(e){/* chunk incompleto, ignorar */}
+            }
+        }
+
+        // Render final con KaTeX
+        renderLatex(bubble);
+        box.scrollTop=box.scrollHeight;
+
+        // Estimar tokens (aprox 4 chars = 1 token)
+        const tokens=Math.round((text.length+fullText.length)/4);
         logQuery(user,text,subj,tokens,isUpload).catch(console.error);
-        // Si se agotaron las consultas después de esta, mostrar promo
+
+        // Mostrar promo si se agotaron los límites
         const d2=await getUserData(user.uid);
         if(d2.queriesUsed>=MAX_QUERIES&&d2.uploadsUsed>=MAX_UPLOADS)showPromoBanner();
+
     }catch(e){
         removeTyping();
         addMessage('⚠️ Error de conexión: '+e.message,false,subj);
