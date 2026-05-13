@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -135,8 +136,25 @@
             addUserMessage(text);
             userInput.value = '';
             
-            // Simulación o llamada real a Groq aquí
-            addStayMessage("Estoy procesando tu consulta técnica...");
+            // Crear el mensaje de carga de STAY
+            const typingId = 'typing-' + Date.now();
+            const typingDiv = document.createElement('div');
+            typingDiv.id = typingId;
+            typingDiv.className = 'flex flex-col items-start fade-in';
+            typingDiv.innerHTML = `<span class="text-[10px] text-blue-500 mono mb-1 ml-2">STAY // PROCESANDO...</span>
+                                   <div class="glass p-4 rounded-3xl rounded-tl-none max-w-[85%] text-sm border-l-4 border-blue-500 animate-pulse">Analizando variables...</div>`;
+            chatBox.appendChild(typingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        
+            try {
+                const answer = await askGroq(text);
+                document.getElementById(typingId).remove(); // Quitar el "Procesando"
+                addStayMessage(answer);
+            } catch (e) {
+                document.getElementById(typingId).remove();
+                addStayMessage("Error de conexión con el nexo. Reintentá en unos segundos.");
+                console.error(e);
+            }
         }
 
         sendBtn.onclick = handleSend;
