@@ -4,52 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUREKA</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
     <style>
-        /* MODO CLARO POR DEFECTO */
-        body { background-color: #f8fafc; color: #1e293b; font-family: sans-serif; }
-        .chat-container { height: calc(100vh - 180px); overflow-y: auto; }
-        .bubble-stay { background: white; border-left: 4px solid #2563eb; padding: 1rem; border-radius: 0.5rem; shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        /* Estilo para que las negritas se vean */
-        .bubble-stay strong, .bubble-stay b { font-weight: bold; color: #1d4ed8; }
+        body { background-color: #f1f5f9; color: #0f172a; font-family: sans-serif; }
+        .chat-container { height: calc(100vh - 160px); overflow-y: auto; padding-bottom: 20px; }
+        .bubble-stay { background: white; border-left: 4px solid #2563eb; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .bubble-stay strong { color: #1d4ed8; font-weight: bold; }
     </style>
 </head>
-<body class="p-0 m-0">
+<body class="flex flex-col h-screen">
 
     <header class="bg-white border-b p-4 flex justify-between items-center shadow-sm">
         <div class="flex items-center gap-2">
             <div class="bg-blue-600 text-white w-8 h-8 rounded flex items-center justify-center font-bold">E</div>
-            <h1 class="font-bold text-xl">EUREKA</h1>
+            <h1 class="font-bold text-xl text-blue-900">EUREKA</h1>
         </div>
         <div id="auth-area">
             <button id="login-btn" class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm">CONECTAR</button>
         </div>
     </header>
 
-    <main class="max-w-3xl mx-auto p-4">
+    <main class="flex-1 max-w-3xl w-full mx-auto p-4 overflow-hidden">
         <div id="chat-box" class="chat-container space-y-4">
-            <div id="welcome-msg" class="bubble-stay">
-                Cargando sistema...
-            </div>
-        </div>
-
-        <div id="input-area" class="fixed bottom-0 left-0 w-full bg-white p-4 border-t opacity-50 pointer-events-none">
-            <div class="max-w-3xl mx-auto flex gap-2">
-                <input type="text" id="user-input" placeholder="Escribí acá..." class="flex-1 border rounded p-2 outline-none focus:border-blue-500">
-                <button id="send-btn" class="bg-blue-600 text-white px-6 rounded font-bold">ENVIAR</button>
-            </div>
+            <div id="welcome-msg" class="bubble-stay">Iniciando sistema...</div>
         </div>
     </main>
 
+    <footer id="input-area" class="bg-white border-t p-4 opacity-50 pointer-events-none">
+        <div class="max-w-3xl mx-auto flex gap-2">
+            <input type="text" id="user-input" placeholder="Escribí tu consulta aquí..." class="flex-1 border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="send-btn" class="bg-blue-600 text-white px-6 rounded-lg font-bold hover:bg-blue-700">ENVIAR</button>
+        </div>
+    </footer>
+
     <script>
         const WORKER_URL = "https://eureka-proxy.fisicai-eureka-01.workers.dev";
-        
         const firebaseConfig = {
             apiKey: "AIzaSyCGTT2IwpD_L415hHW26UsCAp5PdjfEDqg",
             authDomain: "eureka-tutor.firebaseapp.com",
@@ -63,37 +55,40 @@
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // 1. Manejo de Inicio de Sesión y Persistencia
         auth.onAuthStateChanged(user => {
+            const authArea = document.getElementById('auth-area');
+            const inputArea = document.getElementById('input-area');
             if (user) {
-                document.getElementById('auth-area').innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold">${user.displayName.split(' ')[0]}</span>
-                        <img src="${user.photoURL}" id="logout" class="w-8 h-8 rounded-full cursor-pointer border hover:opacity-75" title="Salir">
+                // BOTÓN DE CIERRE DE SESIÓN CLARO
+                authArea.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${user.photoURL}" class="w-8 h-8 rounded-full border">
+                        <button id="logout-btn" class="text-xs font-bold text-red-600 border border-red-200 px-2 py-1 rounded hover:bg-red-50">SALIR</button>
                     </div>`;
-                document.getElementById('input-area').classList.remove('opacity-50', 'pointer-events-none');
-                document.getElementById('logout').onclick = () => auth.signOut().then(() => location.reload());
-                setInitialMessage(`Sincronizado. Hola **${user.displayName.split(' ')[0]}**, soy STAY. El nexo de **Física y Química** está listo.`);
+                inputArea.classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('logout-btn').onclick = () => auth.signOut().then(() => location.reload());
+                renderMsg('welcome-msg', `¡Sincronizado! Hola **${user.displayName.split(' ')[0]}**, soy STAY. El nexo de **Física y Química** está listo.`);
             } else {
-                setInitialMessage("Hola. Por favor **Iniciá Sesión** con Google para usar el tutor.");
+                renderMsg('welcome-msg', "Hola. Por favor **Conectá tu cuenta** para empezar.");
             }
         });
 
         document.getElementById('login-btn').onclick = () => auth.signInWithPopup(provider);
 
-        function setInitialMessage(text) {
-            document.getElementById('welcome-msg').innerHTML = marked.parse(text);
+        function renderMsg(id, text) {
+            document.getElementById(id).innerHTML = marked.parse(text);
         }
 
         function addMessage(text, isUser = false) {
             const div = document.createElement('div');
             div.className = isUser ? "flex justify-end" : "flex justify-start";
             const inner = document.createElement('div');
-            inner.className = isUser ? "bg-blue-600 text-white p-3 rounded-lg max-w-[80%]" : "bubble-stay max-w-[80%]";
+            inner.className = isUser ? "bg-blue-600 text-white p-3 rounded-lg max-w-[85%]" : "bubble-stay max-w-[85%]";
             inner.innerHTML = isUser ? text : marked.parse(text);
             div.appendChild(inner);
-            document.getElementById('chat-box').appendChild(div);
-            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+            const box = document.getElementById('chat-box');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
         async function handleSend() {
@@ -104,11 +99,10 @@
             addMessage(text, true);
             input.value = '';
 
-            // Mostrar estado "Pensando"
             const typing = document.createElement('div');
-            typing.id = "typing";
-            typing.className = "text-xs italic text-gray-500";
-            typing.innerText = "STAY está analizando...";
+            typing.id = "typing-indicator";
+            typing.className = "text-xs text-blue-500 font-bold ml-2 animate-pulse";
+            typing.innerText = "STAY está pensando...";
             document.getElementById('chat-box').appendChild(typing);
 
             try {
@@ -118,16 +112,18 @@
                     body: JSON.stringify({ question: text })
                 });
                 const data = await response.json();
-                document.getElementById('typing').remove();
+                const indicator = document.getElementById('typing-indicator');
+                if(indicator) indicator.remove();
                 addMessage(data.choices[0].message.content);
             } catch (e) {
-                document.getElementById('typing').remove();
-                addMessage("Error de conexión. Chequeá que el Worker esté activo.");
+                const indicator = document.getElementById('typing-indicator');
+                if(indicator) indicator.remove();
+                addMessage("Hubo un error en el nexo. Revisá la consola.");
             }
         }
 
         document.getElementById('send-btn').onclick = handleSend;
-        document.getElementById('user-input').onkeypress = (e) => { if(e.key === 'Enter') handleSend(); };
+        input.onkeypress = (e) => { if(e.key === 'Enter') handleSend(); };
     </script>
 </body>
 </html>
