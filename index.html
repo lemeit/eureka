@@ -2,172 +2,230 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>EUREKA · Tutor IA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- KaTeX para fórmulas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- marked -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --bg:#f7f6f2; --surface:#fff; --border:#e2e0d8; --text:#1a1814; --muted:#8a8680;
-            --accent:#2a52d4; --accent-light:#eef1fc; --accent-dark:#1a3aa8;
-            --amber:#b45309; --amber-light:#fef3e2;
-            --red:#dc2626; --red-light:#fef2f2;
-            --green:#15803d; --green-light:#f0fdf4;
+        :root{
+            --bg:#f7f6f2;--surface:#fff;--border:#e2e0d8;--text:#1a1814;--muted:#8a8680;
+            --accent:#2a52d4;--accent-light:#eef1fc;--accent-dark:#1a3aa8;
+            --amber:#b45309;--amber-light:#fef3e2;
+            --red:#dc2626;--red-light:#fef2f2;
+            --green:#15803d;--green-light:#f0fdf4;
             --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
             --shadow-lg:0 4px 16px rgba(0,0,0,.10),0 1px 4px rgba(0,0,0,.06);
+            --radius:12px;
         }
         *{box-sizing:border-box;margin:0;padding:0;}
-        body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+        body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;font-size:15px;}
 
-        /* HEADER */
-        header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow);z-index:100;}
-        .logo{display:flex;align-items:center;gap:10px;}
-        .logo-badge{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;color:#fff;font-size:15px;}
-        .logo-text{font-family:'Space Mono',monospace;font-weight:700;font-size:17px;letter-spacing:-.5px;}
-        .logo-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-        #auth-area{display:flex;align-items:center;gap:10px;position:relative;}
+        /* ── HEADER ── */
+        header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow);z-index:100;}
+        .logo{display:flex;align-items:center;gap:9px;}
+        .logo-badge{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;color:#fff;font-size:14px;flex-shrink:0;}
+        .logo-text{font-family:'Space Mono',monospace;font-weight:700;font-size:16px;letter-spacing:-.5px;}
+        .logo-sub{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;line-height:1;}
+        #auth-area{display:flex;align-items:center;gap:8px;position:relative;}
 
-        /* QUOTA BADGE */
-        #quota-badge{font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:3px 8px;border-radius:20px;}
+        /* quota */
+        #quota-badge{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:2px 7px;border-radius:20px;white-space:nowrap;}
         #quota-badge.warning{color:var(--amber);border-color:var(--amber);background:var(--amber-light);}
         #quota-badge.danger{color:var(--red);border-color:var(--red);background:var(--red-light);}
 
-        /* USER DROPDOWN */
+        /* dropdown */
         .user-menu-wrap{position:relative;}
-        .user-trigger{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:24px;padding:4px 10px 4px 4px;cursor:pointer;transition:border-color .15s;}
+        .user-trigger{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:24px;padding:3px 9px 3px 3px;cursor:pointer;transition:border-color .15s;}
         .user-trigger:hover{border-color:var(--accent);}
-        .user-trigger img{width:26px;height:26px;border-radius:50%;object-fit:cover;}
-        .user-trigger span{font-size:13px;font-weight:500;}
-        .user-trigger .chevron{font-size:10px;color:var(--muted);transition:transform .2s;}
+        .user-trigger img{width:24px;height:24px;border-radius:50%;object-fit:cover;}
+        .user-trigger .uname{font-size:12px;font-weight:500;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+        .user-trigger .chevron{font-size:9px;color:var(--muted);transition:transform .2s;}
         .user-trigger.open .chevron{transform:rotate(180deg);}
-        .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);min-width:220px;overflow:hidden;display:none;z-index:200;}
+        .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:210px;overflow:hidden;display:none;z-index:200;}
         .user-dropdown.open{display:block;animation:fadeDown .15s ease;}
         @keyframes fadeDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-        .dd-header{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg);}
+        .dd-header{padding:11px 13px;border-bottom:1px solid var(--border);background:var(--bg);}
         .dd-name{font-size:13px;font-weight:600;}
-        .dd-email{font-size:11px;color:var(--muted);margin-top:2px;word-break:break-all;}
-        .dd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;cursor:pointer;transition:background .12s;border:none;background:none;width:100%;text-align:left;color:var(--text);}
+        .dd-email{font-size:11px;color:var(--muted);margin-top:1px;word-break:break-all;}
+        .dd-item{display:flex;align-items:center;gap:9px;padding:9px 13px;font-size:13px;cursor:pointer;transition:background .12s;border:none;background:none;width:100%;text-align:left;color:var(--text);}
         .dd-item:hover{background:var(--bg);}
         .dd-item.danger{color:var(--red);}
         .dd-item.danger:hover{background:var(--red-light);}
         .dd-sep{height:1px;background:var(--border);}
 
-        /* LOGIN BTN */
-        .btn-login{background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:8px;transition:background .15s,transform .1s;}
-        .btn-login:hover{background:var(--accent-dark);transform:translateY(-1px);}
+        /* login btn */
+        .btn-login{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:7px;transition:background .15s;}
+        .btn-login:hover{background:var(--accent-dark);}
 
-        /* SUBJECT BAR */
-        #subject-bar{display:flex;gap:6px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
-        .subj-btn{font-size:12px;font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;transition:all .15s;}
+        /* ── SUBJECT BAR ── */
+        #subject-bar{display:flex;gap:5px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+        #subject-bar::-webkit-scrollbar{display:none;}
+        .subj-btn{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;transition:all .15s;white-space:nowrap;flex-shrink:0;}
         .subj-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-light);}
         .subj-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-        /* CHAT */
-        #chat-box{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
-        #chat-box::-webkit-scrollbar{width:4px;}
+        /* ── CHAT ── */
+        #chat-box{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+        #chat-box::-webkit-scrollbar{width:3px;}
         #chat-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-        .msg-row{display:flex;gap:10px;max-width:780px;width:100%;}
-        .msg-row.user{align-self:flex-end;flex-direction:row-reverse;}
-        .msg-row.stay{align-self:flex-start;}
-        .msg-avatar{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;}
+        .msg-row{display:flex;gap:8px;width:100%;max-width:760px;}
+        .msg-row.user{align-self:flex-end;flex-direction:row-reverse;max-width:90%;}
+        .msg-row.stay{align-self:flex-start;max-width:95%;}
+        .msg-avatar{width:28px;height:28px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;margin-top:2px;}
         .msg-avatar.stay-av{background:var(--accent);color:#fff;}
         .msg-avatar.user-av{background:var(--text);color:#fff;}
-        .bubble{padding:11px 15px;border-radius:12px;font-size:14px;line-height:1.65;max-width:calc(100% - 44px);box-shadow:var(--shadow);}
+        .bubble{padding:10px 13px;border-radius:11px;font-size:14px;line-height:1.65;max-width:100%;box-shadow:var(--shadow);}
         .bubble.stay{background:var(--surface);border:1px solid var(--border);border-top-left-radius:3px;}
         .bubble.user{background:var(--accent);color:#fff;border-top-right-radius:3px;}
+        /* markdown */
         .bubble.stay strong{color:var(--accent);font-weight:600;}
-        .bubble.stay em{color:var(--amber);font-style:italic;}
-        .bubble.stay p{margin-bottom:8px;}.bubble.stay p:last-child{margin-bottom:0;}
-        .bubble.stay ul,.bubble.stay ol{padding-left:18px;margin-bottom:8px;}
-        .bubble.stay li{margin-bottom:4px;}
-        .bubble.stay code{font-family:'Space Mono',monospace;font-size:12px;background:var(--bg);padding:2px 5px;border-radius:4px;border:1px solid var(--border);}
-        .bubble.stay pre{background:var(--text);color:#e2e0d8;padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0;}
+        .bubble.stay em{color:var(--amber);}
+        .bubble.stay p{margin-bottom:7px;}.bubble.stay p:last-child{margin-bottom:0;}
+        .bubble.stay ul,.bubble.stay ol{padding-left:16px;margin-bottom:7px;}
+        .bubble.stay li{margin-bottom:3px;}
+        .bubble.stay h3,.bubble.stay h4{font-size:14px;font-weight:600;color:var(--accent);margin:8px 0 4px;}
+        .bubble.stay code{font-family:'Space Mono',monospace;font-size:11px;background:var(--bg);padding:1px 4px;border-radius:3px;border:1px solid var(--border);}
+        .bubble.stay pre{background:#1a1814;color:#e2e0d8;padding:10px;border-radius:7px;overflow-x:auto;margin:7px 0;}
         .bubble.stay pre code{background:none;border:none;color:inherit;padding:0;}
-        .subj-pill{display:inline-block;font-size:10px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 7px;border-radius:10px;margin-bottom:6px;letter-spacing:.5px;}
+        /* KaTeX */
+        .bubble.stay .katex-display{overflow-x:auto;overflow-y:hidden;padding:6px 0;}
+        .bubble.stay .katex{font-size:1em;}
+        /* subject pill */
+        .subj-pill{display:inline-block;font-size:9px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 6px;border-radius:8px;margin-bottom:5px;letter-spacing:.4px;}
         .subj-pill.fisica{background:var(--accent-light);color:var(--accent);}
         .subj-pill.quimica{background:var(--amber-light);color:var(--amber);}
         .subj-pill.fisq{background:var(--green-light);color:var(--green);}
-        .typing-dots{display:flex;gap:4px;align-items:center;padding:4px 2px;}
-        .typing-dots span{width:6px;height:6px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite;}
+        /* typing */
+        .typing-dots{display:flex;gap:4px;align-items:center;padding:3px 0;}
+        .typing-dots span{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite;}
         .typing-dots span:nth-child(2){animation-delay:.2s;}
         .typing-dots span:nth-child(3){animation-delay:.4s;}
-        @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
-        .welcome-bubble{background:var(--accent-light);border:1px solid #c7d4f8;border-radius:12px;padding:16px 20px;max-width:520px;align-self:flex-start;}
-        .welcome-bubble h3{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px;}
-        .welcome-bubble p{font-size:13px;line-height:1.6;}
-        .chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
-        .chip{font-size:12px;padding:4px 10px;background:#fff;border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--accent);font-weight:500;transition:all .15s;}
+        @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}
+        /* welcome */
+        .welcome-bubble{background:var(--accent-light);border:1px solid #c7d4f8;border-radius:var(--radius);padding:14px 16px;max-width:520px;align-self:flex-start;}
+        .welcome-bubble h3{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:5px;}
+        .welcome-bubble p{font-size:13px;line-height:1.55;}
+        .chip-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+        .chip{font-size:11px;padding:4px 9px;background:#fff;border:1px solid var(--border);border-radius:18px;cursor:pointer;color:var(--accent);font-weight:500;transition:all .15s;}
         .chip:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
 
-        /* LOGIN SCREEN */
-        #login-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px;}
-        .login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;max-width:420px;width:100%;box-shadow:var(--shadow-lg);}
-        .login-icon{width:52px;height:52px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-family:'Space Mono',monospace;font-weight:700;font-size:20px;color:#fff;}
-        .login-card h2{text-align:center;font-size:21px;font-weight:600;margin-bottom:6px;}
-        .login-card .sub{text-align:center;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px;}
-        .login-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:12px;}
+        /* ── PROMO BANNER ── */
+        .promo-banner{background:linear-gradient(135deg,#1a3aa8 0%,#2a52d4 60%,#4f46e5 100%);border-radius:var(--radius);padding:18px 20px;color:#fff;max-width:520px;align-self:flex-start;box-shadow:var(--shadow-lg);}
+        .promo-banner h3{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;margin-bottom:6px;letter-spacing:.3px;}
+        .promo-banner p{font-size:13px;line-height:1.6;opacity:.92;margin-bottom:12px;}
+        .promo-banner .promo-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
+        .promo-banner .ptag{font-size:10px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:2px 8px;font-family:'Space Mono',monospace;}
+        .promo-cta{display:flex;gap:8px;flex-wrap:wrap;}
+        .promo-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;transition:all .15s;}
+        .promo-btn.wa{background:#25d366;color:#fff;border:none;}
+        .promo-btn.wa:hover{background:#1ebe5d;}
+        .promo-btn.ig{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);}
+        .promo-btn.ig:hover{background:rgba(255,255,255,.25);}
+
+        /* ── FILE UPLOAD ── */
+        #upload-area{display:none;padding:0 16px 8px;flex-shrink:0;}
+        .upload-inner{max-width:760px;margin:0 auto;}
+        .upload-box{border:1.5px dashed var(--border);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:10px;background:var(--bg);cursor:pointer;transition:all .15s;font-size:13px;color:var(--muted);}
+        .upload-box:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+        .upload-box input{display:none;}
+        #file-name-display{font-size:11px;color:var(--green);margin-top:4px;font-family:'Space Mono',monospace;}
+
+        /* ── LOGIN SCREEN ── */
+        #login-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;overflow-y:auto;}
+        .login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 28px;max-width:400px;width:100%;box-shadow:var(--shadow-lg);}
+        .login-icon{width:48px;height:48px;background:var(--accent);border-radius:11px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-family:'Space Mono',monospace;font-weight:700;font-size:19px;color:#fff;}
+        .login-card h2{text-align:center;font-size:19px;font-weight:600;margin-bottom:5px;}
+        .login-card .sub{text-align:center;font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+        .login-divider{display:flex;align-items:center;gap:10px;margin:13px 0;color:var(--muted);font-size:11px;}
         .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-        .btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;transition:all .15s;margin-bottom:10px;}
+        .btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:all .15s;margin-bottom:8px;}
         .btn-google:hover{border-color:var(--accent);background:var(--accent-light);color:var(--accent);}
-        .form-group{margin-bottom:12px;}
-        .form-group label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--muted);}
-        .form-group input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;}
-        .form-group input:focus{border-color:var(--accent);}
-        .btn-primary{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s;}
+        .form-group{margin-bottom:10px;}
+        .form-group label{display:block;font-size:11px;font-weight:600;margin-bottom:3px;color:var(--muted);letter-spacing:.3px;}
+        .form-group input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;background:var(--bg);}
+        .form-group input:focus{border-color:var(--accent);background:#fff;}
+        .btn-primary{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s;margin-top:4px;}
         .btn-primary:hover{background:var(--accent-dark);}
         .btn-link{background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-family:'DM Sans',sans-serif;text-decoration:underline;}
-        #auth-error{font-size:12px;color:var(--red);text-align:center;min-height:16px;margin-top:8px;}
-        .login-toggle{text-align:center;font-size:12px;color:var(--muted);margin-top:14px;}
-        .login-footer{font-size:11px;color:var(--muted);text-align:center;max-width:320px;}
+        #auth-error{font-size:11px;color:var(--red);text-align:center;min-height:14px;margin-top:6px;}
+        .login-toggle{text-align:center;font-size:12px;color:var(--muted);margin-top:12px;}
+        .login-footer{font-size:11px;color:var(--muted);text-align:center;max-width:300px;}
 
-        /* INPUT AREA */
-        #input-area{background:var(--surface);border-top:1px solid var(--border);padding:12px 20px;flex-shrink:0;}
-        .input-row{display:flex;gap:8px;max-width:780px;margin:0 auto;align-items:flex-end;}
-        #user-input{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);outline:none;resize:none;min-height:42px;max-height:120px;transition:border-color .15s;line-height:1.5;}
+        /* ── INPUT AREA ── */
+        #input-area{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
+        .input-row{display:flex;gap:7px;max-width:760px;margin:0 auto;align-items:flex-end;}
+        #user-input{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--bg);outline:none;resize:none;min-height:40px;max-height:110px;transition:border-color .15s;line-height:1.5;}
         #user-input:focus{border-color:var(--accent);background:#fff;}
         #user-input::placeholder{color:var(--muted);}
-        #send-btn{background:var(--accent);color:#fff;border:none;width:42px;height:42px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,transform .1s;}
-        #send-btn:hover{background:var(--accent-dark);transform:translateY(-1px);}
-        #send-btn:disabled{background:var(--border);cursor:not-allowed;transform:none;}
-        #input-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:6px;max-width:780px;margin-left:auto;margin-right:auto;}
+        #user-input:disabled{opacity:.5;cursor:not-allowed;}
+        #send-btn{background:var(--accent);color:#fff;border:none;width:40px;height:40px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;}
+        #send-btn:hover{background:var(--accent-dark);}
+        #send-btn:disabled{background:var(--border);cursor:not-allowed;}
+        #upload-btn{background:var(--bg);border:1.5px solid var(--border);color:var(--muted);width:40px;height:40px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+        #upload-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+        #upload-btn:disabled{opacity:.4;cursor:not-allowed;}
+        #input-hint{font-size:10px;color:var(--muted);text-align:center;margin-top:5px;max-width:760px;margin-left:auto;margin-right:auto;}
 
-        /* ADMIN PANEL */
-        #admin-panel{flex:1;overflow-y:auto;padding:20px;display:none;flex-direction:column;gap:16px;}
-        .admin-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-        .admin-header h2{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;}
-        .admin-badge{font-size:10px;font-family:'Space Mono',monospace;background:var(--amber-light);color:var(--amber);border:1px solid var(--amber);padding:2px 8px;border-radius:20px;}
-        .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
-        .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);}
-        .stat-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'Space Mono',monospace;margin-bottom:6px;}
-        .stat-card .value{font-size:26px;font-weight:700;font-family:'Space Mono',monospace;color:var(--accent);}
-        .stat-card .sub-val{font-size:11px;color:var(--muted);margin-top:2px;}
-        .admin-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow);}
-        .admin-section h3{font-size:13px;font-weight:600;font-family:'Space Mono',monospace;margin-bottom:12px;color:var(--accent);}
-        .log-table{width:100%;border-collapse:collapse;font-size:12px;}
-        .log-table th{text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-family:'Space Mono',monospace;font-size:11px;}
-        .log-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+        /* ── ADMIN ── */
+        #admin-panel{flex:1;overflow-y:auto;padding:16px;display:none;flex-direction:column;gap:14px;}
+        .admin-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+        .admin-header h2{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;}
+        .admin-badge{font-size:10px;font-family:'Space Mono',monospace;background:var(--amber-light);color:var(--amber);border:1px solid var(--amber);padding:2px 7px;border-radius:18px;}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+        .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;box-shadow:var(--shadow);}
+        .stat-card .label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'Space Mono',monospace;margin-bottom:5px;}
+        .stat-card .value{font-size:24px;font-weight:700;font-family:'Space Mono',monospace;color:var(--accent);}
+        .stat-card .sub-val{font-size:10px;color:var(--muted);margin-top:2px;}
+        .admin-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;box-shadow:var(--shadow);}
+        .admin-section h3{font-size:12px;font-weight:600;font-family:'Space Mono',monospace;margin-bottom:10px;color:var(--accent);}
+        .log-table{width:100%;border-collapse:collapse;font-size:11px;}
+        .log-table th{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-family:'Space Mono',monospace;font-size:10px;}
+        .log-table td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
         .log-table tr:last-child td{border-bottom:none;}
         .log-table tr:hover td{background:var(--bg);}
-        .tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;font-family:'Space Mono',monospace;}
+        .tag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:7px;font-family:'Space Mono',monospace;}
         .tag.fisica{background:var(--accent-light);color:var(--accent);}
         .tag.quimica{background:var(--amber-light);color:var(--amber);}
         .tag.fisq{background:var(--green-light);color:var(--green);}
-        .admin-refresh{background:var(--bg);border:1px solid var(--border);padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Space Mono',monospace;transition:all .15s;}
+        .admin-refresh{background:var(--bg);border:1px solid var(--border);padding:5px 12px;border-radius:7px;font-size:11px;cursor:pointer;font-family:'Space Mono',monospace;transition:all .15s;}
         .admin-refresh:hover{border-color:var(--accent);color:var(--accent);}
-        .bar-wrap{background:var(--bg);border-radius:6px;height:8px;overflow:hidden;}
-        .bar-fill{height:100%;border-radius:6px;background:var(--accent);transition:width .4s ease;}
+        .bar-wrap{background:var(--bg);border-radius:5px;height:7px;overflow:hidden;}
+        .bar-fill{height:100%;border-radius:5px;background:var(--accent);transition:width .4s ease;}
 
-        @media(max-width:600px){
-            header{padding:0 12px;}
-            #subject-bar{padding:8px 12px;}
-            #chat-box{padding:12px;}
-            #input-area{padding:10px 12px;}
-            .login-card{padding:24px 18px;}
+        /* ── RESPONSIVE ── */
+        @media(max-width:480px){
+            header{padding:0 12px;height:50px;}
+            .logo-sub{display:none;}
+            .uname{display:none;}
+            #quota-badge{display:none;}
+            #subject-bar{padding:7px 10px;gap:4px;}
+            .subj-btn{font-size:10px;padding:4px 10px;}
+            #chat-box{padding:12px 10px;gap:10px;}
+            .bubble{font-size:13px;padding:9px 11px;}
+            .msg-avatar{display:none;}
+            .msg-row.user{max-width:95%;}
+            .msg-row.stay{max-width:100%;}
+            #input-area{padding:8px 10px;}
+            #user-input{font-size:14px;padding:8px 10px;}
+            #input-hint{display:none;}
+            .login-card{padding:22px 18px;}
             .stats-grid{grid-template-columns:1fr 1fr;}
+            .promo-banner{padding:14px 15px;}
+            .promo-cta{flex-direction:column;}
+        }
+        @media(min-width:481px) and (max-width:768px){
+            .msg-row.user{max-width:88%;}
+            .msg-row.stay{max-width:96%;}
         }
     </style>
 </head>
@@ -187,6 +245,8 @@
     <button class="subj-btn active" data-subj="fisica">⚛ Física</button>
     <button class="subj-btn" data-subj="quimica">⚗ Química</button>
     <button class="subj-btn" data-subj="fisq">🔬 Fisicoquímica</button>
+    <button class="subj-btn" data-subj="carbono">🧬 Q. Carbono</button>
+    <button class="subj-btn" data-subj="ingreso">📐 Ingreso</button>
 </div>
 
 <!-- LOGIN -->
@@ -194,27 +254,17 @@
     <div class="login-card">
         <div class="login-icon">E</div>
         <h2>Bienvenido a EUREKA</h2>
-        <p class="sub">Tu tutor de Física y Química. Registrate gratis o ingresá con tu cuenta Google.</p>
+        <p class="sub">Tu tutor de Física y Química. Registrate gratis o ingresá con Google.</p>
         <button class="btn-google" id="login-google-btn">
-            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <svg viewBox="0 0 24 24" width="17" height="17"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             Continuar con Google
         </button>
         <div class="login-divider">o con email</div>
-        <!-- EMAIL FORM -->
         <div id="email-form">
-            <div class="form-group">
-                <label>EMAIL</label>
-                <input type="email" id="inp-email" placeholder="tu@email.com" autocomplete="email">
-            </div>
-            <div class="form-group">
-                <label>CONTRASEÑA</label>
-                <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password">
-            </div>
+            <div class="form-group"><label>EMAIL</label><input type="email" id="inp-email" placeholder="tu@email.com" autocomplete="email"></div>
+            <div class="form-group"><label>CONTRASEÑA</label><input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password"></div>
             <div id="register-fields" style="display:none">
-                <div class="form-group">
-                    <label>NOMBRE</label>
-                    <input type="text" id="inp-name" placeholder="Tu nombre">
-                </div>
+                <div class="form-group"><label>NOMBRE</label><input type="text" id="inp-name" placeholder="Tu nombre"></div>
             </div>
             <div id="auth-error"></div>
             <button class="btn-primary" id="email-action-btn">Ingresar</button>
@@ -224,39 +274,58 @@
             </div>
         </div>
     </div>
-    <p class="login-footer">Acceso gratuito · Sin publicidad · 10 consultas por día</p>
+    <p class="login-footer">Acceso gratuito · 3 consultas + 1 archivo por día</p>
 </div>
 
 <!-- CHAT -->
 <div id="chat-box" style="display:none"></div>
 
-<!-- ADMIN PANEL -->
+<!-- ADMIN -->
 <div id="admin-panel"></div>
+
+<!-- UPLOAD indicator -->
+<div id="upload-area">
+    <div class="upload-inner">
+        <div id="file-name-display"></div>
+    </div>
+</div>
 
 <!-- INPUT -->
 <div id="input-area" style="display:none">
     <div class="input-row">
+        <button id="upload-btn" title="Subir texto/enunciado (1 vez por día)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <input type="file" id="file-input" accept=".txt,.md,.text,text/plain" style="display:none">
         <textarea id="user-input" placeholder="Escribí tu consulta…" rows="1"></textarea>
         <button id="send-btn" title="Enviar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
     </div>
-    <div id="input-hint">Enter para enviar · Shift+Enter nueva línea</div>
+    <div id="input-hint">Enter enviar · Shift+Enter nueva línea · 📎 subir enunciado (1/día)</div>
 </div>
 
 <script>
-// ── CONSTANTES ────────────────────────────────────────────────────────────────
+// ── CONSTANTES ──────────────────────────────────────────────────────────────
 const WORKER_URL  = "https://eureka-proxy.fisicai-eureka-01.workers.dev";
-const MAX_DAILY   = 10;
+const MAX_QUERIES = 3;   // consultas de texto por día
+const MAX_UPLOADS = 1;   // subidas de archivo por día
 const ADMIN_EMAIL = "fisicai.eureka.01@gmail.com";
-const SUBJ_LABELS = {fisica:'Física', quimica:'Química', fisq:'Fisicoquímica'};
-const SUBJ_PROMPTS = {
-    fisica:  'Sos STAY, tutor experto en Física. Respondé paso a paso en español, explicá conceptos antes de resolver. Sé conciso pero completo. Usá negritas para términos clave.',
-    quimica: 'Sos STAY, tutor experto en Química. Respondé paso a paso en español. Balanceá ecuaciones si corresponde, usá nomenclatura IUPAC. Sé conciso.',
-    fisq:    'Sos STAY, tutor experto en Fisicoquímica. Respondé paso a paso en español. Integrá física y química, incluí unidades y fundamentos termodinámicos cuando corresponda.'
+
+const SUBJ_LABELS = {
+    fisica:'Física', quimica:'Química', fisq:'Fisicoquímica',
+    carbono:'Q. del Carbono', ingreso:'Ingreso'
 };
 
-// ── FIREBASE ──────────────────────────────────────────────────────────────────
+const SUBJ_PROMPTS = {
+    fisica:   'Sos STAY, tutor experto en Física (nivel secundario y universitario). Respondé paso a paso en español. Usá notación LaTeX para fórmulas: inline con $...$ y bloque con $$...$$. Explicá conceptos antes de resolver. Sé preciso y claro.',
+    quimica:  'Sos STAY, tutor experto en Química (nivel secundario, CBC, UBA XXI). Respondé paso a paso en español. Usá LaTeX para fórmulas químicas y ecuaciones: inline $...$ y bloque $$...$$. Balanceá ecuaciones si corresponde, usá nomenclatura IUPAC.',
+    fisq:     'Sos STAY, tutor experto en Fisicoquímica. Respondé paso a paso en español. Usá LaTeX para todas las ecuaciones: $...$ inline, $$...$$ en bloque. Incluí unidades, fundamentos termodinámicos y cinéticos cuando corresponda.',
+    carbono:  'Sos STAY, tutor experto en Química Orgánica y Química del Carbono (nivel secundario y CBC). Respondé paso a paso en español. Usá LaTeX para estructuras y fórmulas cuando sea posible. Explicá grupos funcionales, nomenclatura IUPAC y reacciones orgánicas claramente.',
+    ingreso:  'Sos STAY, tutor experto para exámenes de ingreso universitario (CBC UBA, UBA XXI, UTN, UNLP, UNICEN). Respondé paso a paso en español. Usá LaTeX para fórmulas: $...$ inline y $$...$$ en bloque. Enfocate en los temas típicos de ingreso: cinemática, dinámica, termodinámica básica, estequiometría, gases y soluciones.'
+};
+
+// ── FIREBASE ────────────────────────────────────────────────────────────────
 firebase.initializeApp({
     apiKey:"AIzaSyCGTT2IwpD_L415hHW26UsCAp5PdjfEDqg",
     authDomain:"eureka-tutor.firebaseapp.com",
@@ -269,444 +338,447 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-// ── SUBJECT ───────────────────────────────────────────────────────────────────
+// ── SUBJECT ──────────────────────────────────────────────────────────────────
 let currentSubject = 'fisica';
-document.querySelectorAll('.subj-btn').forEach(btn => {
-    btn.onclick = () => {
+document.querySelectorAll('.subj-btn').forEach(btn=>{
+    btn.onclick=()=>{
         document.querySelectorAll('.subj-btn').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
-        currentSubject = btn.dataset.subj;
+        currentSubject=btn.dataset.subj;
     };
 });
 
-// ── LOGIN MODE (email/register toggle) ────────────────────────────────────────
-let isRegisterMode = false;
-document.getElementById('toggle-mode-btn').onclick = () => {
-    isRegisterMode = !isRegisterMode;
-    document.getElementById('register-fields').style.display = isRegisterMode ? 'block' : 'none';
-    document.getElementById('email-action-btn').textContent  = isRegisterMode ? 'Crear cuenta' : 'Ingresar';
-    document.getElementById('toggle-text').textContent       = isRegisterMode ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?';
-    document.getElementById('toggle-mode-btn').textContent   = isRegisterMode ? 'Iniciá sesión' : 'Registrate';
-    document.getElementById('auth-error').textContent = '';
+// ── AUTH LOGIN FORM ──────────────────────────────────────────────────────────
+let isRegisterMode=false;
+document.getElementById('toggle-mode-btn').onclick=()=>{
+    isRegisterMode=!isRegisterMode;
+    document.getElementById('register-fields').style.display=isRegisterMode?'block':'none';
+    document.getElementById('email-action-btn').textContent=isRegisterMode?'Crear cuenta':'Ingresar';
+    document.getElementById('toggle-text').textContent=isRegisterMode?'¿Ya tenés cuenta?':'¿No tenés cuenta?';
+    document.getElementById('toggle-mode-btn').textContent=isRegisterMode?'Iniciá sesión':'Registrate';
+    document.getElementById('auth-error').textContent='';
 };
-
-function setAuthError(msg){ document.getElementById('auth-error').textContent = msg; }
-
-document.getElementById('login-google-btn').onclick = () =>
-    auth.signInWithPopup(googleProvider).catch(e => setAuthError(e.message));
-
-document.getElementById('email-action-btn').onclick = async () => {
-    const email = document.getElementById('inp-email').value.trim();
-    const pass  = document.getElementById('inp-pass').value;
-    const name  = document.getElementById('inp-name').value.trim();
+function setAuthError(m){document.getElementById('auth-error').textContent=m;}
+document.getElementById('login-google-btn').onclick=()=>
+    auth.signInWithPopup(googleProvider).catch(e=>setAuthError(e.message));
+document.getElementById('email-action-btn').onclick=async()=>{
+    const email=document.getElementById('inp-email').value.trim();
+    const pass=document.getElementById('inp-pass').value;
+    const name=document.getElementById('inp-name').value.trim();
     setAuthError('');
-    if (!email || !pass) return setAuthError('Completá email y contraseña.');
-    try {
-        if (isRegisterMode) {
-            const cred = await auth.createUserWithEmailAndPassword(email, pass);
-            if (name) await cred.user.updateProfile({ displayName: name });
-        } else {
-            await auth.signInWithEmailAndPassword(email, pass);
-        }
-    } catch(e) {
-        const msgs = {
-            'auth/email-already-in-use':'El email ya está registrado.',
-            'auth/invalid-email':'Email inválido.',
-            'auth/weak-password':'Contraseña muy corta (mínimo 6 caracteres).',
-            'auth/user-not-found':'Usuario no encontrado.',
-            'auth/wrong-password':'Contraseña incorrecta.'
-        };
-        setAuthError(msgs[e.code] || e.message);
+    if(!email||!pass)return setAuthError('Completá email y contraseña.');
+    try{
+        if(isRegisterMode){
+            const c=await auth.createUserWithEmailAndPassword(email,pass);
+            if(name)await c.user.updateProfile({displayName:name});
+        }else{await auth.signInWithEmailAndPassword(email,pass);}
+    }catch(e){
+        const m={'auth/email-already-in-use':'Email ya registrado.','auth/invalid-email':'Email inválido.',
+            'auth/weak-password':'Contraseña muy corta (mín. 6 caracteres).','auth/user-not-found':'Usuario no encontrado.',
+            'auth/wrong-password':'Contraseña incorrecta.'};
+        setAuthError(m[e.code]||e.message);
     }
 };
-
-// Enter en inputs del form
-['inp-email','inp-pass','inp-name'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', e => {
-        if (e.key === 'Enter') document.getElementById('email-action-btn').click();
+['inp-email','inp-pass','inp-name'].forEach(id=>{
+    document.getElementById(id).addEventListener('keydown',e=>{
+        if(e.key==='Enter')document.getElementById('email-action-btn').click();
     });
 });
 
-// ── AUTH STATE ────────────────────────────────────────────────────────────────
-auth.onAuthStateChanged(user => {
-    if (user) showApp(user);
-    else      showLoginScreen();
-});
+// ── AUTH STATE ───────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(user=>{if(user)showApp(user);else showLoginScreen();});
 
-function showLoginScreen() {
-    document.getElementById('login-screen').style.display  = 'flex';
-    document.getElementById('chat-box').style.display      = 'none';
-    document.getElementById('admin-panel').style.display   = 'none';
-    document.getElementById('input-area').style.display    = 'none';
-    document.getElementById('subject-bar').style.display   = 'none';
-    document.getElementById('auth-area').innerHTML = '';
+function showLoginScreen(){
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('chat-box').style.display='none';
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('input-area').style.display='none';
+    document.getElementById('subject-bar').style.display='none';
+    document.getElementById('upload-area').style.display='none';
+    document.getElementById('auth-area').innerHTML='';
 }
 
-async function showApp(user) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('subject-bar').style.display  = 'flex';
+async function showApp(user){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('subject-bar').style.display='flex';
+    const isAdmin=user.email===ADMIN_EMAIL;
+    const firstName=(user.displayName||user.email.split('@')[0]).split(' ')[0];
+    const avatarUrl=user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=2a52d4&color=fff&size=64`;
 
-    const isAdmin = user.email === ADMIN_EMAIL;
-
-    // Auth area con dropdown
-    const firstName = (user.displayName || user.email.split('@')[0]).split(' ')[0];
-    document.getElementById('auth-area').innerHTML = `
+    document.getElementById('auth-area').innerHTML=`
         <span id="quota-badge"></span>
         <div class="user-menu-wrap">
             <div class="user-trigger" id="user-trigger">
-                <img src="${user.photoURL || 'https://ui-avatars.com/api/?name='+encodeURIComponent(firstName)+'&background=2a52d4&color=fff&size=64'}" alt="avatar">
-                <span>${firstName}</span>
+                <img src="${avatarUrl}" alt="avatar">
+                <span class="uname">${firstName}</span>
                 <span class="chevron">▾</span>
             </div>
             <div class="user-dropdown" id="user-dropdown">
                 <div class="dd-header">
-                    <div class="dd-name">${user.displayName || firstName}</div>
+                    <div class="dd-name">${user.displayName||firstName}</div>
                     <div class="dd-email">${user.email}</div>
                 </div>
-                ${isAdmin ? `<button class="dd-item" id="dd-admin-btn">⚙ Panel Admin</button><div class="dd-sep"></div>` : ''}
+                ${isAdmin?`<button class="dd-item" id="dd-admin-btn">⚙ Panel Admin</button><div class="dd-sep"></div>`:''}
                 <button class="dd-item danger" id="dd-logout-btn">↩ Cerrar sesión</button>
             </div>
         </div>`;
 
-    // Dropdown toggle
-    document.getElementById('user-trigger').onclick = (e) => {
+    document.getElementById('user-trigger').onclick=e=>{
         e.stopPropagation();
-        const dd = document.getElementById('user-dropdown');
-        const tr = document.getElementById('user-trigger');
-        dd.classList.toggle('open');
-        tr.classList.toggle('open');
+        document.getElementById('user-dropdown').classList.toggle('open');
+        document.getElementById('user-trigger').classList.toggle('open');
     };
-    document.addEventListener('click', () => {
+    document.addEventListener('click',()=>{
         document.getElementById('user-dropdown')?.classList.remove('open');
         document.getElementById('user-trigger')?.classList.remove('open');
-    }, {once:false});
+    });
+    document.getElementById('dd-logout-btn').onclick=()=>auth.signOut();
+    if(isAdmin)document.getElementById('dd-admin-btn').onclick=()=>{
+        document.getElementById('user-dropdown').classList.remove('open');
+        showAdminPanel();
+    };
 
-    document.getElementById('dd-logout-btn').onclick = () => auth.signOut();
-    if (isAdmin) {
-        document.getElementById('dd-admin-btn').onclick = () => {
-            document.getElementById('user-dropdown').classList.remove('open');
-            showAdminPanel();
-        };
-    }
-
-    // Quota badge
     await updateQuotaBadge(user.uid);
-
-    // Show chat
-    showChat(user, firstName, isAdmin);
+    showChat(user,firstName);
 }
 
-// ── QUOTA (Firestore) ─────────────────────────────────────────────────────────
-function todayStr() { return new Date().toISOString().slice(0,10); }
+// ── QUOTA ────────────────────────────────────────────────────────────────────
+function todayStr(){return new Date().toISOString().slice(0,10);}
 
-async function getUsedToday(uid) {
-    const doc = await db.collection('users').doc(uid).get();
-    if (!doc.exists) return 0;
-    const data = doc.data();
-    if (data.quotaDate !== todayStr()) return 0;
-    return data.quotaUsed || 0;
+async function getUserData(uid){
+    const doc=await db.collection('users').doc(uid).get();
+    if(!doc.exists)return{queriesUsed:0,uploadsUsed:0,quotaDate:''};
+    const d=doc.data();
+    if(d.quotaDate!==todayStr())return{queriesUsed:0,uploadsUsed:0,quotaDate:todayStr()};
+    return{queriesUsed:d.queriesUsed||0,uploadsUsed:d.uploadsUsed||0,quotaDate:d.quotaDate};
 }
 
-async function incrementQuota(uid) {
-    const ref  = db.collection('users').doc(uid);
-    const doc  = await ref.get();
-    const today = todayStr();
-    if (!doc.exists || doc.data().quotaDate !== today) {
-        await ref.set({ quotaDate: today, quotaUsed: 1 }, { merge: true });
-    } else {
-        await ref.update({ quotaUsed: firebase.firestore.FieldValue.increment(1) });
+async function incrementQuota(uid,field){
+    const ref=db.collection('users').doc(uid);
+    const doc=await ref.get();
+    const today=todayStr();
+    if(!doc.exists||doc.data().quotaDate!==today){
+        const data={quotaDate:today,queriesUsed:0,uploadsUsed:0};
+        data[field]=1;
+        await ref.set(data,{merge:true});
+    }else{
+        await ref.update({[field]:firebase.firestore.FieldValue.increment(1)});
     }
 }
 
-async function updateQuotaBadge(uid) {
-    const used = await getUsedToday(uid);
-    const rem  = Math.max(0, MAX_DAILY - used);
-    const badge = document.getElementById('quota-badge');
-    if (!badge) return rem;
-    badge.textContent = rem + '/' + MAX_DAILY + ' hoy';
-    badge.className   = '';
-    if (rem === 0)  badge.classList.add('danger');
-    else if (rem <= 3) badge.classList.add('warning');
-    return rem;
+async function updateQuotaBadge(uid){
+    const d=await getUserData(uid);
+    const remQ=Math.max(0,MAX_QUERIES-d.queriesUsed);
+    const remU=Math.max(0,MAX_UPLOADS-d.uploadsUsed);
+    const badge=document.getElementById('quota-badge');
+    if(!badge)return{remQ,remU};
+    badge.textContent=`${remQ}✉ ${remU}📎`;
+    badge.className='';
+    if(remQ===0&&remU===0)badge.classList.add('danger');
+    else if(remQ<=1)badge.classList.add('warning');
+    return{remQ,remU};
 }
 
-// ── LOG QUERY (Firestore) ─────────────────────────────────────────────────────
-async function logQuery(user, question, subject, tokensUsed) {
+async function logQuery(user,question,subject,tokens,isUpload=false){
     await db.collection('queries').add({
-        uid:       user.uid,
-        email:     user.email,
-        name:      user.displayName || '',
-        question:  question.slice(0, 300),
-        subject:   subject,
-        tokens:    tokensUsed || 0,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        uid:user.uid,email:user.email,name:user.displayName||'',
+        question:question.slice(0,300),subject,tokens:tokens||0,
+        isUpload:isUpload,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
 }
 
-// ── CHAT ──────────────────────────────────────────────────────────────────────
-function showChat(user, firstName, isAdmin) {
-    const chatBox = document.getElementById('chat-box');
-    chatBox.style.display   = 'flex';
-    chatBox.style.flexDirection = 'column';
-    document.getElementById('admin-panel').style.display = 'none';
-    document.getElementById('input-area').style.display  = 'block';
+// ── CHAT ─────────────────────────────────────────────────────────────────────
+function showChat(user,firstName){
+    const chatBox=document.getElementById('chat-box');
+    chatBox.style.display='flex';
+    chatBox.style.flexDirection='column';
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('input-area').style.display='block';
+    document.getElementById('upload-area').style.display='block';
 
-    if (chatBox.children.length === 0) {
-        const welcome = document.createElement('div');
-        welcome.className = 'welcome-bubble';
-        welcome.innerHTML = `
+    if(chatBox.children.length===0){
+        const w=document.createElement('div');
+        w.className='welcome-bubble';
+        w.innerHTML=`
             <h3>STAY · Sistema de Apoyo y Tutoría</h3>
-            <p>Hola <strong>${firstName}</strong>, estoy listo para ayudarte con Física, Química y Fisicoquímica. Elegí la materia arriba y hacé tu consulta.</p>
+            <p>Hola <strong>${firstName}</strong>, seleccioná una materia arriba y hacé tu consulta. Tenés <strong>${MAX_QUERIES} preguntas</strong> y <strong>${MAX_UPLOADS} archivo</strong> por día.</p>
             <div class="chip-row">
                 <span class="chip" onclick="setInput(this)">¿Qué es la segunda ley de Newton?</span>
                 <span class="chip" onclick="setInput(this)">Balancear: H₂ + O₂ → H₂O</span>
                 <span class="chip" onclick="setInput(this)">Gas ideal: despejar T de PV=nRT</span>
                 <span class="chip" onclick="setInput(this)">¿Qué es la molaridad?</span>
+                <span class="chip" onclick="setInput(this)">Cinemática: MRUA, fórmulas</span>
             </div>`;
-        chatBox.appendChild(welcome);
+        chatBox.appendChild(w);
     }
 
-    getUsedToday(user.uid).then(used => {
-        if (used >= MAX_DAILY) {
-            document.getElementById('user-input').disabled = true;
-            document.getElementById('send-btn').disabled   = true;
-            document.getElementById('user-input').placeholder = 'Límite diario alcanzado. Volvé mañana.';
-        }
-    });
+    checkAndDisableInput(user.uid);
 }
 
-function setInput(el) {
-    const inp = document.getElementById('user-input');
-    inp.value = el.textContent;
-    inp.focus();
+async function checkAndDisableInput(uid){
+    const {remQ,remU}=await updateQuotaBadge(uid);
+    const inp=document.getElementById('user-input');
+    const sendBtn=document.getElementById('send-btn');
+    const upBtn=document.getElementById('upload-btn');
+    if(remQ===0){
+        inp.disabled=true;sendBtn.disabled=true;
+        inp.placeholder='Límite de consultas alcanzado. Volvé mañana.';
+    }
+    if(remU===0)upBtn.disabled=true;
 }
 
-function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setInput(el){
+    const inp=document.getElementById('user-input');
+    inp.value=el.textContent;inp.focus();
+}
 
-function addMessage(text, isUser=false, subject=null) {
-    const box   = document.getElementById('chat-box');
-    const row   = document.createElement('div');
-    row.className = 'msg-row '+(isUser?'user':'stay');
-    const av = document.createElement('div');
-    av.className = 'msg-avatar '+(isUser?'user-av':'stay-av');
-    av.textContent = isUser ? 'Vos' : 'ST';
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble '+(isUser?'user':'stay');
-    if (!isUser && subject) {
-        const pill = document.createElement('div');
-        pill.className = 'subj-pill '+subject;
-        pill.textContent = SUBJ_LABELS[subject].toUpperCase();
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderLatex(el){
+    if(typeof renderMathInElement==='function'){
+        renderMathInElement(el,{
+            delimiters:[
+                {left:'$$',right:'$$',display:true},
+                {left:'$',right:'$',display:false},
+                {left:'\\(',right:'\\)',display:false},
+                {left:'\\[',right:'\\]',display:true}
+            ],
+            throwOnError:false
+        });
+    }
+}
+
+function addMessage(text,isUser=false,subject=null){
+    const box=document.getElementById('chat-box');
+    const row=document.createElement('div');
+    row.className='msg-row '+(isUser?'user':'stay');
+    const av=document.createElement('div');
+    av.className='msg-avatar '+(isUser?'user-av':'stay-av');
+    av.textContent=isUser?'Vos':'ST';
+    const bubble=document.createElement('div');
+    bubble.className='bubble '+(isUser?'user':'stay');
+    if(!isUser&&subject){
+        const pill=document.createElement('div');
+        pill.className='subj-pill '+subject;
+        pill.textContent=SUBJ_LABELS[subject]?.toUpperCase()||subject.toUpperCase();
         bubble.appendChild(pill);
     }
-    const content = document.createElement('div');
-    content.innerHTML = isUser ? escapeHtml(text) : marked.parse(text);
+    const content=document.createElement('div');
+    content.innerHTML=isUser?escapeHtml(text):marked.parse(text);
     bubble.appendChild(content);
-    row.appendChild(av); row.appendChild(bubble);
+    row.appendChild(av);row.appendChild(bubble);
     box.appendChild(row);
-    box.scrollTop = box.scrollHeight;
+    if(!isUser)renderLatex(bubble);
+    box.scrollTop=box.scrollHeight;
+}
+
+function showPromoBanner(){
+    const box=document.getElementById('chat-box');
+    const banner=document.createElement('div');
+    banner.className='promo-banner';
+    banner.innerHTML=`
+        <h3>¡Agotaste tus consultas de hoy!</h3>
+        <p>¿Querés seguir aprendiendo? El Prof. Ing. <strong>Luciano Lamaita</strong> dicta clases particulares online y presenciales en Saladillo.</p>
+        <div class="promo-tags">
+            <span class="ptag">Física</span><span class="ptag">Química</span><span class="ptag">Fisicoquímica</span>
+            <span class="ptag">Q. del Carbono</span><span class="ptag">CBC · UBA XXI</span>
+            <span class="ptag">Ingreso UTN · UNLP · UNICEN</span>
+        </div>
+        <div class="promo-cta">
+            <a class="promo-btn wa" href="https://wa.me/5492344546609?text=Hola%20Luciano,%20vi%20EUREKA%20y%20quiero%20info%20sobre%20clases" target="_blank">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+            </a>
+            <a class="promo-btn ig" href="https://instagram.com/lemeitok" target="_blank">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                @lemeitok
+            </a>
+        </div>`;
+    box.appendChild(banner);
+    box.scrollTop=box.scrollHeight;
 }
 
 function showTyping(){
     removeTyping();
-    const box = document.getElementById('chat-box');
-    const row = document.createElement('div');
-    row.id='typing-row'; row.className='msg-row stay';
+    const box=document.getElementById('chat-box');
+    const row=document.createElement('div');
+    row.id='typing-row';row.className='msg-row stay';
     row.innerHTML=`<div class="msg-avatar stay-av">ST</div><div class="bubble stay"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
-    box.appendChild(row); box.scrollTop=box.scrollHeight;
+    box.appendChild(row);box.scrollTop=box.scrollHeight;
 }
-function removeTyping(){ document.getElementById('typing-row')?.remove(); }
+function removeTyping(){document.getElementById('typing-row')?.remove();}
 
 // auto-resize
 document.getElementById('user-input').addEventListener('input',function(){
-    this.style.height='auto';
-    this.style.height=Math.min(this.scrollHeight,120)+'px';
+    this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';
 });
 
-async function handleSend() {
-    const user = auth.currentUser;
-    if (!user) return;
-    const inp  = document.getElementById('user-input');
-    const text = inp.value.trim();
-    if (!text) return;
-
-    const used = await getUsedToday(user.uid);
-    if (used >= MAX_DAILY) {
-        addMessage('⚠️ Alcanzaste el límite de '+MAX_DAILY+' consultas por hoy. Volvé mañana.',false,currentSubject);
+// ── FILE UPLOAD ──────────────────────────────────────────────────────────────
+document.getElementById('upload-btn').onclick=()=>document.getElementById('file-input').click();
+document.getElementById('file-input').onchange=async(e)=>{
+    const user=auth.currentUser;if(!user)return;
+    const file=e.target.files[0];if(!file)return;
+    const d=await getUserData(user.uid);
+    if(d.uploadsUsed>=MAX_UPLOADS){
+        addMessage('⚠️ Ya usaste tu carga de archivo del día. Volvé mañana.',false,currentSubject);
         return;
     }
+    if(file.size>30000){addMessage('⚠️ El archivo es muy grande (máx. 30 KB de texto).',false,currentSubject);return;}
+    const text=await file.text();
+    const preview=text.slice(0,120).replace(/\n/g,' ')+'…';
+    document.getElementById('file-name-display').textContent='📎 '+file.name+' · '+text.length+' caracteres cargados';
+    const prompt=`El alumno subió el siguiente texto/enunciado:\n\n${text}\n\nResolvé o explicá este contenido paso a paso.`;
+    addMessage(`📎 Archivo cargado: ${file.name}\n${preview}`,true);
+    await incrementQuota(user.uid,'uploadsUsed');
+    await updateQuotaBadge(user.uid);
+    sendToGroq(user,prompt,currentSubject,true);
+    e.target.value='';
+};
 
-    const subj = currentSubject;
-    addMessage(text, true);
-    inp.value=''; inp.style.height='auto';
-    showTyping();
-
-    await incrementQuota(user.uid);
-    const rem = await updateQuotaBadge(user.uid);
-    if (rem === 0) {
-        document.getElementById('user-input').disabled = true;
-        document.getElementById('send-btn').disabled   = true;
+// ── SEND ─────────────────────────────────────────────────────────────────────
+async function handleSend(){
+    const user=auth.currentUser;if(!user)return;
+    const inp=document.getElementById('user-input');
+    const text=inp.value.trim();if(!text)return;
+    const d=await getUserData(user.uid);
+    if(d.queriesUsed>=MAX_QUERIES){
+        addMessage('⚠️ Alcanzaste el límite de '+MAX_QUERIES+' consultas por hoy.',false,currentSubject);
+        showPromoBanner();return;
     }
+    addMessage(text,true);
+    inp.value='';inp.style.height='auto';
+    await incrementQuota(user.uid,'queriesUsed');
+    const{remQ}=await updateQuotaBadge(user.uid);
+    if(remQ===0){
+        document.getElementById('user-input').disabled=true;
+        document.getElementById('send-btn').disabled=true;
+        document.getElementById('user-input').placeholder='Límite de consultas alcanzado. Volvé mañana.';
+    }
+    sendToGroq(user,text,currentSubject,false);
+}
 
-    try {
-        const res = await fetch(WORKER_URL,{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({ question:text, system:SUBJ_PROMPTS[subj] })
+async function sendToGroq(user,text,subj,isUpload){
+    showTyping();
+    try{
+        const res=await fetch(WORKER_URL,{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({question:text,system:SUBJ_PROMPTS[subj]})
         });
-        const data = await res.json();
+        const data=await res.json();
         removeTyping();
-        if (data.error){ addMessage('⚠️ Error de IA: '+data.error.message,false,subj); return; }
-        const answer = data.choices[0].message.content;
-        const tokens = data.usage?.total_tokens || 0;
-        addMessage(answer, false, subj);
-        // Log en Firestore (sin await para no bloquear UI)
-        logQuery(user, text, subj, tokens).catch(console.error);
-    } catch(e) {
+        if(data.error){addMessage('⚠️ Error de IA: '+data.error.message,false,subj);return;}
+        const answer=data.choices[0].message.content;
+        const tokens=data.usage?.total_tokens||0;
+        addMessage(answer,false,subj);
+        logQuery(user,text,subj,tokens,isUpload).catch(console.error);
+        // Si se agotaron las consultas después de esta, mostrar promo
+        const d2=await getUserData(user.uid);
+        if(d2.queriesUsed>=MAX_QUERIES&&d2.uploadsUsed>=MAX_UPLOADS)showPromoBanner();
+    }catch(e){
         removeTyping();
-        addMessage('⚠️ Error de conexión: '+e.message,false,currentSubject);
+        addMessage('⚠️ Error de conexión: '+e.message,false,subj);
     }
 }
 
-document.getElementById('send-btn').onclick = handleSend;
-document.getElementById('user-input').addEventListener('keydown', e=>{
+document.getElementById('send-btn').onclick=handleSend;
+document.getElementById('user-input').addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSend();}
 });
 
 // ── ADMIN PANEL ───────────────────────────────────────────────────────────────
-async function showAdminPanel() {
-    document.getElementById('chat-box').style.display    = 'none';
-    document.getElementById('input-area').style.display  = 'none';
-    const panel = document.getElementById('admin-panel');
-    panel.style.display = 'flex';
-    panel.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);font-family:'Space Mono',monospace;font-size:13px;">Cargando datos…</div>`;
+async function showAdminPanel(){
+    document.getElementById('chat-box').style.display='none';
+    document.getElementById('input-area').style.display='none';
+    document.getElementById('upload-area').style.display='none';
+    const panel=document.getElementById('admin-panel');
+    panel.style.display='flex';panel.style.flexDirection='column';
+    panel.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);font-family:'Space Mono',monospace;font-size:12px;">Cargando…</div>`;
     await loadAdminData(panel);
 }
 
-async function loadAdminData(panel) {
-    try {
-        // Traer últimas 200 queries
-        const snap = await db.collection('queries')
-            .orderBy('timestamp','desc')
-            .limit(200)
-            .get();
-
-        const queries = snap.docs.map(d=>d.data());
-        const totalQ  = queries.length;
-        const totalTok = queries.reduce((a,q)=>a+(q.tokens||0),0);
-        const today = todayStr();
-        const todayQ = queries.filter(q=>q.timestamp?.toDate()?.toISOString().slice(0,10)===today).length;
-        const todayTok= queries.filter(q=>q.timestamp?.toDate()?.toISOString().slice(0,10)===today).reduce((a,q)=>a+(q.tokens||0),0);
-
-        // Usuarios únicos
-        const uids = [...new Set(queries.map(q=>q.uid))];
-
-        // Por materia
-        const bySubj = {fisica:0,quimica:0,fisq:0};
-        queries.forEach(q=>{ if(bySubj[q.subject]!==undefined) bySubj[q.subject]++; });
-
-        // Top usuarios (últimos 200)
-        const userMap = {};
+async function loadAdminData(panel){
+    try{
+        const snap=await db.collection('queries').orderBy('timestamp','desc').limit(200).get();
+        const queries=snap.docs.map(d=>d.data());
+        const today=todayStr();
+        const todayQ=queries.filter(q=>q.timestamp?.toDate()?.toISOString().slice(0,10)===today);
+        const totalTok=queries.reduce((a,q)=>a+(q.tokens||0),0);
+        const todayTok=todayQ.reduce((a,q)=>a+(q.tokens||0),0);
+        const uids=[...new Set(queries.map(q=>q.uid))];
+        const bySubj={};
+        Object.keys(SUBJ_LABELS).forEach(s=>bySubj[s]=0);
+        queries.forEach(q=>{if(bySubj[q.subject]!==undefined)bySubj[q.subject]++;});
+        const userMap={};
         queries.forEach(q=>{
-            if(!userMap[q.uid]) userMap[q.uid]={email:q.email,name:q.name,count:0,tokens:0};
-            userMap[q.uid].count++;
-            userMap[q.uid].tokens+=(q.tokens||0);
+            if(!userMap[q.uid])userMap[q.uid]={email:q.email,name:q.name,count:0,tokens:0};
+            userMap[q.uid].count++;userMap[q.uid].tokens+=(q.tokens||0);
         });
-        const topUsers = Object.values(userMap).sort((a,b)=>b.count-a.count).slice(0,10);
+        const topUsers=Object.values(userMap).sort((a,b)=>b.count-a.count).slice(0,10);
+        const maxSubj=Math.max(...Object.values(bySubj),1);
 
-        const maxSubj = Math.max(...Object.values(bySubj),1);
-
-        panel.innerHTML = `
+        panel.innerHTML=`
         <div class="admin-header">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <h2>Panel Admin</h2>
-                <span class="admin-badge">ADMIN</span>
+            <div style="display:flex;align-items:center;gap:9px;">
+                <h2>Panel Admin</h2><span class="admin-badge">ADMIN</span>
             </div>
             <button class="admin-refresh" onclick="showAdminPanel()">↻ Actualizar</button>
         </div>
-
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="label">Consultas hoy</div>
-                <div class="value">${todayQ}</div>
-                <div class="sub-val">${totalQ} en total (últimas 200)</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Tokens hoy</div>
-                <div class="value">${todayTok.toLocaleString()}</div>
-                <div class="sub-val">${totalTok.toLocaleString()} total</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Usuarios únicos</div>
-                <div class="value">${uids.length}</div>
-                <div class="sub-val">en últimas 200 consultas</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Tokens/consulta</div>
-                <div class="value">${totalQ ? Math.round(totalTok/totalQ) : 0}</div>
-                <div class="sub-val">promedio</div>
-            </div>
+            <div class="stat-card"><div class="label">Consultas hoy</div><div class="value">${todayQ.length}</div><div class="sub-val">${queries.length} total (últ.200)</div></div>
+            <div class="stat-card"><div class="label">Tokens hoy</div><div class="value">${todayTok.toLocaleString()}</div><div class="sub-val">${totalTok.toLocaleString()} total</div></div>
+            <div class="stat-card"><div class="label">Usuarios únicos</div><div class="value">${uids.length}</div><div class="sub-val">en últ. 200 consultas</div></div>
+            <div class="stat-card"><div class="label">Tokens/consulta</div><div class="value">${queries.length?Math.round(totalTok/queries.length):0}</div><div class="sub-val">promedio</div></div>
         </div>
-
-        <div class="admin-section">
-            <h3>Uso por materia</h3>
+        <div class="admin-section"><h3>Uso por materia</h3>
             ${Object.entries(bySubj).map(([s,n])=>`
-            <div style="margin-bottom:10px;">
-                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-                    <span class="tag ${s}">${SUBJ_LABELS[s]}</span>
-                    <span style="font-family:'Space Mono',monospace;">${n} consultas</span>
+            <div style="margin-bottom:9px;">
+                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+                    <span class="tag ${s}">${SUBJ_LABELS[s]||s}</span>
+                    <span style="font-family:'Space Mono',monospace;">${n}</span>
                 </div>
                 <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(n/maxSubj*100)}%"></div></div>
             </div>`).join('')}
         </div>
-
-        <div class="admin-section">
-            <h3>Top usuarios</h3>
+        <div class="admin-section"><h3>Top usuarios</h3>
             <table class="log-table">
-                <thead><tr><th>Usuario</th><th>Email</th><th>Consultas</th><th>Tokens</th></tr></thead>
-                <tbody>
-                ${topUsers.map(u=>`
-                    <tr>
-                        <td>${u.name||'—'}</td>
-                        <td style="color:var(--muted)">${u.email}</td>
-                        <td style="font-family:'Space Mono',monospace">${u.count}</td>
-                        <td style="font-family:'Space Mono',monospace">${(u.tokens||0).toLocaleString()}</td>
-                    </tr>`).join('')}
-                </tbody>
+                <thead><tr><th>Nombre</th><th>Email</th><th>Consultas</th><th>Tokens</th></tr></thead>
+                <tbody>${topUsers.map(u=>`<tr>
+                    <td>${u.name||'—'}</td><td style="color:var(--muted)">${u.email}</td>
+                    <td style="font-family:'Space Mono',monospace">${u.count}</td>
+                    <td style="font-family:'Space Mono',monospace">${(u.tokens||0).toLocaleString()}</td>
+                </tr>`).join('')}</tbody>
             </table>
         </div>
-
-        <div class="admin-section">
-            <h3>Últimas 50 consultas</h3>
+        <div class="admin-section"><h3>Últimas 50 consultas</h3>
             <table class="log-table">
-                <thead><tr><th>Hora</th><th>Usuario</th><th>Materia</th><th>Consulta</th><th>Tokens</th></tr></thead>
-                <tbody>
-                ${queries.slice(0,50).map(q=>{
-                    const ts = q.timestamp?.toDate();
-                    const hora = ts ? ts.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
-                    return `<tr>
-                        <td style="white-space:nowrap;font-family:'Space Mono',monospace;font-size:11px">${hora}</td>
-                        <td style="color:var(--muted);font-size:11px">${q.name||q.email||'—'}</td>
-                        <td><span class="tag ${q.subject||''}">${SUBJ_LABELS[q.subject]||q.subject||'—'}</span></td>
-                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(q.question||'')}</td>
-                        <td style="font-family:'Space Mono',monospace;font-size:11px">${q.tokens||0}</td>
+                <thead><tr><th>Hora</th><th>Usuario</th><th>Materia</th><th>Consulta</th><th>Tok</th></tr></thead>
+                <tbody>${queries.slice(0,50).map(q=>{
+                    const ts=q.timestamp?.toDate();
+                    const hora=ts?ts.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+                    return`<tr>
+                        <td style="white-space:nowrap;font-family:'Space Mono',monospace;font-size:10px">${hora}</td>
+                        <td style="color:var(--muted);font-size:10px">${q.name||q.email||'—'}</td>
+                        <td><span class="tag ${q.subject||''}">${SUBJ_LABELS[q.subject]||q.subject||'—'}</span>${q.isUpload?'<span style="font-size:9px;margin-left:3px">📎</span>':''}</td>
+                        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(q.question||'')}</td>
+                        <td style="font-family:'Space Mono',monospace;font-size:10px">${q.tokens||0}</td>
                     </tr>`;
-                }).join('')}
-                </tbody>
+                }).join('')}</tbody>
             </table>
         </div>
-
         <div style="padding-bottom:20px;text-align:center;">
             <button class="btn-link" onclick="showChatFromAdmin()">← Volver al chat</button>
         </div>`;
-    } catch(e) {
-        panel.innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">Error cargando datos: ${e.message}</div>`;
+    }catch(e){
+        panel.innerHTML=`<div style="padding:40px;text-align:center;color:var(--red)">Error: ${e.message}</div>`;
     }
 }
 
-function showChatFromAdmin() {
-    document.getElementById('admin-panel').style.display  = 'none';
-    document.getElementById('chat-box').style.display     = 'flex';
-    document.getElementById('input-area').style.display   = 'block';
+function showChatFromAdmin(){
+    document.getElementById('admin-panel').style.display='none';
+    document.getElementById('chat-box').style.display='flex';
+    document.getElementById('input-area').style.display='block';
+    document.getElementById('upload-area').style.display='block';
 }
 </script>
 </body>
