@@ -117,15 +117,30 @@
         }
 
         async function askGroq(question) {
-            const response = await fetch(WORKER_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ question: question })
-            });
-            if (!response.ok) throw new Error("Error en el nexo");
-            const data = await response.json();
-            return data.choices[0].message.content;
+        const response = await fetch(WORKER_URL, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json" 
+            },
+            // Aseguramos que enviamos el campo "question" que el Worker espera
+            body: JSON.stringify({ question: question }) 
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error("Error del Worker:", errorData);
+            throw new Error("Error en el nexo");
         }
+        
+        const data = await response.json();
+        
+        // Verificamos que Groq devolvió una respuesta válida
+        if (data.choices && data.choices[0]) {
+            return data.choices[0].message.content;
+        } else {
+            throw new Error("Respuesta de IA vacía");
+        }
+    }
 
         function addStayMessage(text) {
             const div = document.createElement('div');
