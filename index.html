@@ -3,45 +3,520 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EUREKA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>EUREKA · Tutor IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
-        body { background-color: #f1f5f9; color: #0f172a; font-family: sans-serif; }
-        .chat-container { height: calc(100vh - 160px); overflow-y: auto; padding-bottom: 20px; }
-        .bubble-stay { background: white; border-left: 4px solid #2563eb; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .bubble-stay strong { color: #1d4ed8; font-weight: bold; }
-        .bubble-stay p { margin: 0; }
+        :root {
+            --bg: #f7f6f2;
+            --surface: #ffffff;
+            --border: #e2e0d8;
+            --text: #1a1814;
+            --muted: #8a8680;
+            --accent: #2a52d4;
+            --accent-light: #eef1fc;
+            --accent-dark: #1a3aa8;
+            --amber: #b45309;
+            --amber-light: #fef3e2;
+            --red: #dc2626;
+            --red-light: #fef2f2;
+            --green: #15803d;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-badge {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            color: white;
+            font-size: 15px;
+            letter-spacing: -1px;
+        }
+
+        .logo-text {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-top: 1px;
+        }
+
+        #auth-area { display: flex; align-items: center; gap: 10px; }
+
+        #quota-badge {
+            font-size: 11px;
+            font-family: 'Space Mono', monospace;
+            color: var(--muted);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        #quota-badge.warning { color: var(--amber); border-color: var(--amber); background: var(--amber-light); }
+        #quota-badge.danger  { color: var(--red);   border-color: var(--red);   background: var(--red-light); }
+
+        .user-pill {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 4px 12px 4px 4px;
+        }
+
+        .user-pill img {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-pill span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .btn-logout {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--red);
+            background: none;
+            border: 1px solid transparent;
+            padding: 3px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            transition: all .15s;
+        }
+        .btn-logout:hover { border-color: var(--red); background: var(--red-light); }
+
+        .btn-login {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            display: flex; align-items: center; gap: 8px;
+            transition: background .15s, transform .1s;
+        }
+        .btn-login:hover { background: var(--accent-dark); transform: translateY(-1px); }
+        .btn-login:active { transform: translateY(0); }
+
+        .btn-login svg { width: 16px; height: 16px; }
+
+        /* ── SUBJECT TABS ── */
+        #subject-bar {
+            display: flex;
+            gap: 6px;
+            padding: 10px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .subj-btn {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--muted);
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            transition: all .15s;
+            letter-spacing: 0.3px;
+        }
+
+        .subj-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+        .subj-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* ── CHAT ── */
+        #chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+
+        #chat-box::-webkit-scrollbar { width: 4px; }
+        #chat-box::-webkit-scrollbar-track { background: transparent; }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .msg-row { display: flex; gap: 10px; max-width: 780px; width: 100%; }
+        .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-row.stay { align-self: flex-start; }
+
+        .msg-avatar {
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .msg-avatar.stay-av { background: var(--accent); color: white; }
+        .msg-avatar.user-av { background: var(--text); color: white; }
+
+        .bubble {
+            padding: 11px 15px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.65;
+            max-width: calc(100% - 44px);
+            box-shadow: var(--shadow);
+        }
+
+        .bubble.stay {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-top-left-radius: 3px;
+            color: var(--text);
+        }
+
+        .bubble.user {
+            background: var(--accent);
+            color: white;
+            border-top-right-radius: 3px;
+        }
+
+        /* markdown dentro de bubble */
+        .bubble.stay strong { color: var(--accent); font-weight: 600; }
+        .bubble.stay em { color: var(--amber); font-style: italic; }
+        .bubble.stay p { margin-bottom: 8px; }
+        .bubble.stay p:last-child { margin-bottom: 0; }
+        .bubble.stay ul, .bubble.stay ol { padding-left: 18px; margin-bottom: 8px; }
+        .bubble.stay li { margin-bottom: 4px; }
+        .bubble.stay code {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            background: var(--bg);
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        .bubble.stay pre {
+            background: var(--text);
+            color: #e2e0d8;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+        .bubble.stay pre code { background: none; border: none; color: inherit; padding: 0; }
+        .bubble.stay h3 { font-size: 14px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+
+        /* subject pill inside bubble */
+        .subj-pill {
+            display: inline-block;
+            font-size: 10px;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .subj-pill.fisica  { background: var(--accent-light); color: var(--accent); }
+        .subj-pill.quimica { background: var(--amber-light);  color: var(--amber); }
+        .subj-pill.fisq    { background: #f0fdf4; color: var(--green); }
+
+        /* typing */
+        .typing-dots {
+            display: flex; gap: 4px; align-items: center; padding: 4px 2px;
+        }
+        .typing-dots span {
+            width: 6px; height: 6px;
+            background: var(--muted);
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: .2s; }
+        .typing-dots span:nth-child(3) { animation-delay: .4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); opacity: .4; }
+            40% { transform: translateY(-5px); opacity: 1; }
+        }
+
+        /* ── LOGIN SCREEN ── */
+        #login-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 32px;
+        }
+
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 48px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-icon {
+            width: 56px; height: 56px;
+            background: var(--accent);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 22px;
+            color: white;
+        }
+
+        .login-card h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .btn-google {
+            width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 12px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .btn-google:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+        .login-footer {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            max-width: 320px;
+        }
+
+        /* ── INPUT AREA ── */
+        #input-area {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 12px 20px;
+            flex-shrink: 0;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            max-width: 780px;
+            margin: 0 auto;
+            align-items: flex-end;
+        }
+
+        #user-input {
+            flex: 1;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            outline: none;
+            resize: none;
+            min-height: 42px;
+            max-height: 120px;
+            transition: border-color .15s;
+            line-height: 1.5;
+        }
+        #user-input:focus { border-color: var(--accent); background: white; }
+        #user-input::placeholder { color: var(--muted); }
+
+        #send-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: background .15s, transform .1s;
+        }
+        #send-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+        #send-btn:active { transform: translateY(0); }
+        #send-btn:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+
+        #input-hint {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 6px;
+            max-width: 780px;
+            margin-left: auto; margin-right: auto;
+        }
+
+        /* ── MISC ── */
+        .welcome-bubble {
+            background: var(--accent-light);
+            border: 1px solid #c7d4f8;
+            border-radius: 12px;
+            padding: 16px 20px;
+            max-width: 520px;
+            align-self: flex-start;
+        }
+        .welcome-bubble h3 {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .welcome-bubble p { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+        .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .chip {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--accent);
+            font-weight: 500;
+            transition: all .15s;
+        }
+        .chip:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        @media (max-width: 600px) {
+            header { padding: 0 12px; }
+            #subject-bar { padding: 8px 12px; }
+            #chat-box { padding: 12px; }
+            #input-area { padding: 10px 12px; }
+            .login-card { padding: 28px 20px; }
+        }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body>
 
-    <header class="bg-white border-b p-4 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-2">
-            <div class="bg-blue-600 text-white w-8 h-8 rounded flex items-center justify-center font-bold">E</div>
-            <h1 class="font-bold text-xl text-blue-900">EUREKA</h1>
+    <header>
+        <div class="logo">
+            <div class="logo-badge">E</div>
+            <div>
+                <div class="logo-text">EUREKA</div>
+                <div class="logo-sub">Tutor · Física &amp; Química</div>
+            </div>
         </div>
         <div id="auth-area"></div>
     </header>
 
-    <main class="flex-1 max-w-3xl w-full mx-auto p-4 overflow-hidden">
-        <div id="chat-box" class="chat-container space-y-4">
-            <div id="welcome-msg" class="bubble-stay">Iniciando sistema...</div>
-        </div>
-    </main>
+    <!-- Subject tabs (hidden until login) -->
+    <div id="subject-bar" style="display:none">
+        <button class="subj-btn active" data-subj="fisica">⚛ Física</button>
+        <button class="subj-btn" data-subj="quimica">⚗ Química</button>
+        <button class="subj-btn" data-subj="fisq">🔬 Fisicoquímica</button>
+    </div>
 
-    <footer id="input-area" class="bg-white border-t p-4 opacity-50 pointer-events-none">
-        <div class="max-w-3xl mx-auto flex gap-2">
-            <input type="text" id="user-input" placeholder="Escribí tu consulta aquí..."
-                class="flex-1 border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
-            <button id="send-btn" class="bg-blue-600 text-white px-6 rounded-lg font-bold hover:bg-blue-700">ENVIAR</button>
+    <!-- Login screen -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-icon">E</div>
+            <h2>Bienvenido a EUREKA</h2>
+            <p>Tu tutor de Física y Química asistido por IA. Resolvé dudas, aprendé paso a paso y preparate para tus exámenes.</p>
+            <button class="btn-google" id="login-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Continuar con Google
+            </button>
         </div>
-    </footer>
+        <p class="login-footer">Acceso gratuito · Sin publicidad · Tus datos no se comparten</p>
+    </div>
+
+    <!-- Chat (hidden until login) -->
+    <div id="chat-box" style="display:none; flex:1; overflow-y:auto; padding:20px; flex-direction:column; gap:14px;"></div>
+
+    <!-- Input (hidden until login) -->
+    <div id="input-area" style="display:none">
+        <div class="input-row">
+            <textarea id="user-input" placeholder="Escribí tu consulta…" rows="1"></textarea>
+            <button id="send-btn" title="Enviar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+        </div>
+        <div id="input-hint">Enter para enviar · Shift+Enter nueva línea</div>
+    </div>
 
     <script>
-        const WORKER_URL = "https://eureka-proxy.fisicai-eureka-01.workers.dev";
+        // ── CONFIG ──────────────────────────────────────────────────────────────
+        const WORKER_URL  = "https://eureka-proxy.fisicai-eureka-01.workers.dev";
+        const MAX_DAILY   = 20;   // preguntas por usuario por día
+        const WARN_AT     = 5;    // avisar cuando quedan N preguntas
 
         const firebaseConfig = {
             apiKey: "AIzaSyCGTT2IwpD_L415hHW26UsCAp5PdjfEDqg",
@@ -53,116 +528,237 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        const auth     = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // ── UI ──────────────────────────────────────────────────────────────────
-        function renderWelcome(text) {
-            const el = document.getElementById('welcome-msg');
-            if (el) el.innerHTML = marked.parse(text);
+        // ── SUBJECT ─────────────────────────────────────────────────────────────
+        let currentSubject = 'fisica';
+        const SUBJ_LABELS = { fisica: 'Física', quimica: 'Química', fisq: 'Fisicoquímica' };
+        const SUBJ_PROMPTS = {
+            fisica:  'Sos STAY, un tutor experto en Física. Respondé paso a paso, en español, usando notación clara. Explicá los conceptos antes de resolver. Sé conciso pero completo.',
+            quimica: 'Sos STAY, un tutor experto en Química. Respondé paso a paso, en español. Explicá la teoría, balanceá ecuaciones si es necesario y usá nomenclatura IUPAC correcta. Sé conciso.',
+            fisq:    'Sos STAY, un tutor experto en Fisicoquímica. Respondé paso a paso, en español. Integrá conceptos de física y química, incluí unidades y fundamentos termodinámicos cuando corresponda.'
+        };
+
+        document.querySelectorAll('.subj-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.subj-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSubject = btn.dataset.subj;
+            };
+        });
+
+        // ── QUOTA ───────────────────────────────────────────────────────────────
+        function getQuotaKey(uid) { return 'eq_' + uid + '_' + new Date().toISOString().slice(0,10); }
+
+        function getUsed(uid) {
+            return parseInt(localStorage.getItem(getQuotaKey(uid)) || '0', 10);
+        }
+        function incrementUsed(uid) {
+            const k = getQuotaKey(uid);
+            localStorage.setItem(k, (getUsed(uid) + 1).toString());
+        }
+        function getRemaining(uid) { return Math.max(0, MAX_DAILY - getUsed(uid)); }
+
+        function updateQuotaBadge(uid) {
+            const rem = getRemaining(uid);
+            const badge = document.getElementById('quota-badge');
+            if (!badge) return;
+            badge.textContent = rem + '/' + MAX_DAILY + ' hoy';
+            badge.className = '';
+            if (rem === 0)        badge.classList.add('danger');
+            else if (rem <= WARN_AT) badge.classList.add('warning');
         }
 
-        function setAuthUI(user) {
-            const authArea  = document.getElementById('auth-area');
-            const inputArea = document.getElementById('input-area');
-
+        // ── AUTH ─────────────────────────────────────────────────────────────────
+        auth.onAuthStateChanged(user => {
             if (user) {
-                const firstName = (user.displayName || 'usuario').split(' ')[0];
-                authArea.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <img src="${user.photoURL || ''}" class="w-8 h-8 rounded-full border" alt="avatar">
-                        <span class="text-sm font-semibold text-slate-700">${firstName}</span>
-                        <button id="logout-btn"
-                            class="text-xs font-bold text-red-600 border border-red-200 px-2 py-1 rounded hover:bg-red-50">
-                            SALIR
-                        </button>
-                    </div>`;
-                document.getElementById('logout-btn').onclick = () =>
-                    auth.signOut();
-                inputArea.classList.remove('opacity-50', 'pointer-events-none');
-                renderWelcome('¡Sincronizado! Hola **' + firstName + '**, soy STAY. El nexo de **Física y Química** está listo.');
+                showApp(user);
             } else {
-                authArea.innerHTML = `
-                    <button id="login-btn"
-                        class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">
-                        CONECTAR
-                    </button>`;
-                document.getElementById('login-btn').onclick = () =>
-                    auth.signInWithPopup(provider).catch(err =>
-                        renderWelcome('⚠️ Error de login: ' + err.message)
-                    );
-                inputArea.classList.add('opacity-50', 'pointer-events-none');
-                renderWelcome('Hola. Por favor **Conectá tu cuenta** para empezar.');
+                showLogin();
+            }
+        });
+
+        document.getElementById('login-btn').onclick = () =>
+            auth.signInWithPopup(provider).catch(err =>
+                alert('Error al iniciar sesión: ' + err.message)
+            );
+
+        function showLogin() {
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('chat-box').style.display    = 'none';
+            document.getElementById('input-area').style.display  = 'none';
+            document.getElementById('subject-bar').style.display = 'none';
+            document.getElementById('auth-area').innerHTML = '';
+        }
+
+        function showApp(user) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('subject-bar').style.display  = 'flex';
+            document.getElementById('input-area').style.display   = 'block';
+
+            const chatBox = document.getElementById('chat-box');
+            chatBox.style.display = 'flex';
+
+            // Auth area
+            const firstName = (user.displayName || 'usuario').split(' ')[0];
+            document.getElementById('auth-area').innerHTML = `
+                <span id="quota-badge"></span>
+                <div class="user-pill">
+                    <img src="${user.photoURL || ''}" alt="avatar">
+                    <span>${firstName}</span>
+                </div>
+                <button class="btn-logout" id="logout-btn">SALIR</button>`;
+            document.getElementById('logout-btn').onclick = () => auth.signOut();
+            updateQuotaBadge(user.uid);
+
+            // Welcome if first load
+            if (chatBox.children.length === 0) {
+                const welcome = document.createElement('div');
+                welcome.className = 'welcome-bubble';
+                welcome.innerHTML = `
+                    <h3>STAY · Sistema de Apoyo y Tutoría</h3>
+                    <p>Hola <strong>${firstName}</strong>, estoy listo para ayudarte con Física, Química y Fisicoquímica. Elegí la materia arriba y hacé tu consulta.</p>
+                    <div class="chip-row">
+                        <span class="chip" onclick="setInput(this)">¿Qué es la segunda ley de Newton?</span>
+                        <span class="chip" onclick="setInput(this)">Balancear: H₂ + O₂ → H₂O</span>
+                        <span class="chip" onclick="setInput(this)">Gas ideal: PV=nRT, despejar T</span>
+                        <span class="chip" onclick="setInput(this)">Movimiento uniformemente acelerado</span>
+                    </div>`;
+                chatBox.appendChild(welcome);
+            }
+
+            // Enable input
+            const inp = document.getElementById('user-input');
+            const btn = document.getElementById('send-btn');
+            if (getRemaining(user.uid) === 0) {
+                inp.disabled = true;
+                btn.disabled = true;
+                inp.placeholder = 'Límite diario alcanzado. Volvé mañana.';
             }
         }
 
-        // ── Auth: SOLO onAuthStateChanged, sin getRedirectResult ────────────────
-        auth.onAuthStateChanged(user => setAuthUI(user));
-
-        // ── Chat ────────────────────────────────────────────────────────────────
-        function escapeHtml(str) {
-            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        function setInput(el) {
+            const inp = document.getElementById('user-input');
+            inp.value = el.textContent;
+            inp.focus();
         }
 
-        function addMessage(text, isUser = false) {
+        // ── CHAT ─────────────────────────────────────────────────────────────────
+        function escapeHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function addMessage(text, isUser = false, subject = null) {
             const box  = document.getElementById('chat-box');
-            const wrap = document.createElement('div');
-            wrap.className = isUser ? "flex justify-end" : "flex justify-start";
-            const inner = document.createElement('div');
-            inner.className = isUser
-                ? "bg-blue-600 text-white p-3 rounded-lg max-w-[85%] whitespace-pre-wrap"
-                : "bubble-stay max-w-[85%]";
-            inner.innerHTML = isUser ? escapeHtml(text) : marked.parse(text);
-            wrap.appendChild(inner);
-            box.appendChild(wrap);
+            const row  = document.createElement('div');
+            row.className = 'msg-row ' + (isUser ? 'user' : 'stay');
+
+            const av = document.createElement('div');
+            av.className = 'msg-avatar ' + (isUser ? 'user-av' : 'stay-av');
+            av.textContent = isUser ? 'Vos' : 'ST';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble ' + (isUser ? 'user' : 'stay');
+
+            if (!isUser && subject) {
+                const pill = document.createElement('div');
+                pill.className = 'subj-pill ' + subject;
+                pill.textContent = SUBJ_LABELS[subject].toUpperCase();
+                bubble.appendChild(pill);
+            }
+
+            const content = document.createElement('div');
+            content.innerHTML = isUser ? escapeHtml(text) : marked.parse(text);
+            bubble.appendChild(content);
+
+            row.appendChild(av);
+            row.appendChild(bubble);
+            box.appendChild(row);
             box.scrollTop = box.scrollHeight;
+            return bubble;
         }
 
         function showTyping() {
-            removeTyping();
-            const el = document.createElement('div');
-            el.id = 'typing-indicator';
-            el.className = "text-xs text-blue-500 font-bold ml-2 animate-pulse";
-            el.innerText = "STAY está pensando...";
-            document.getElementById('chat-box').appendChild(el);
+            const box = document.getElementById('chat-box');
+            const row = document.createElement('div');
+            row.id = 'typing-row';
+            row.className = 'msg-row stay';
+            row.innerHTML = `
+                <div class="msg-avatar stay-av">ST</div>
+                <div class="bubble stay"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
         }
 
         function removeTyping() {
-            const el = document.getElementById('typing-indicator');
+            const el = document.getElementById('typing-row');
             if (el) el.remove();
         }
 
+        // Auto-resize textarea
+        const textarea = document.getElementById('user-input');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
         async function handleSend() {
-            const userInput = document.getElementById('user-input');
-            const text = userInput.value.trim();
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const inp  = document.getElementById('user-input');
+            const text = inp.value.trim();
             if (!text) return;
+
+            // Quota check
+            if (getRemaining(user.uid) === 0) {
+                addMessage('⚠️ Alcanzaste el límite de ' + MAX_DAILY + ' consultas por hoy. Volvé mañana.', false, currentSubject);
+                return;
+            }
+
+            const subj = currentSubject;
             addMessage(text, true);
-            userInput.value = '';
+            inp.value = '';
+            inp.style.height = 'auto';
             showTyping();
+
+            incrementUsed(user.uid);
+            updateQuotaBadge(user.uid);
+
+            // Disable if quota exhausted
+            const rem = getRemaining(user.uid);
+            if (rem === 0) {
+                document.getElementById('user-input').disabled = true;
+                document.getElementById('send-btn').disabled   = true;
+            }
+
             try {
                 const res = await fetch(WORKER_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ question: text })
+                    body: JSON.stringify({
+                        question: text,
+                        subject: subj,
+                        system: SUBJ_PROMPTS[subj]
+                    })
                 });
                 const data = await res.json();
                 removeTyping();
-                // Manejo explícito de error de Groq
                 if (data.error) {
-                    addMessage('⚠️ Error de Groq: ' + data.error.message);
+                    addMessage('⚠️ Error de IA: ' + data.error.message, false, subj);
                     return;
                 }
-                addMessage(data.choices[0].message.content);
+                addMessage(data.choices[0].message.content, false, subj);
             } catch (e) {
                 removeTyping();
-                console.error('Worker error:', e);
-                addMessage('⚠️ Error de conexión: ' + e.message);
+                addMessage('⚠️ Error de conexión: ' + e.message, false, subj);
             }
         }
 
         document.getElementById('send-btn').onclick = handleSend;
-        document.getElementById('user-input').addEventListener('keypress', e => {
-            if (e.key === 'Enter') handleSend();
+        document.getElementById('user-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
         });
     </script>
 </body>
