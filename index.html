@@ -1197,28 +1197,68 @@ async function loadAdminData(panel){
         <div style="padding-bottom:20px;text-align:center;">
             <button class="btn-link" onclick="showChatFromAdmin()">← Volver al chat</button>
         </div>`;
-    // Cargar mensajes
+    // Cargar mensajes — agrupados por usuario
     try{
-        const msgSnap=await db.collection('messages').orderBy('timestamp','desc').limit(30).get();
+        const msgSnap=await db.collection('messages').orderBy('timestamp','asc').limit(100).get();
         const msgs=msgSnap.docs.map(d=>({id:d.id,...d.data()}));
         const msgsEl=document.getElementById('admin-msgs-content');
         if(msgsEl){
-            if(msgs.length===0){msgsEl.innerHTML='<p style="font-size:12px;color:var(--muted)">Sin mensajes aún.</p>';}
-            else{
-                msgsEl.innerHTML=msgs.map(m=>{
-                    const ts=m.timestamp?.toDate();
-                    const hora=ts?ts.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-                    return`<div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--bg);">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-                            <span style="font-size:11px;font-weight:600;">${escapeHtml(m.name||m.email||'—')}</span>
-                            <span style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;">${hora}</span>
+            if(msgs.length===0){
+                msgsEl.innerHTML='<p style="font-size:12px;color:var(--muted);text-align:center;padding:16px">Sin mensajes aún.</p>';
+            } else {
+                // Agrupar por uid
+                const byUser={};
+                msgs.forEach(m=>{
+                    const uid=m.uid||m.email||'unknown';
+                    if(!byUser[uid]){byUser[uid]={name:m.name||'',email:m.email||'',msgs:[]};}
+                    byUser[uid].msgs.push(m);
+                });
+                // Ordenar usuarios: primero los que tienen mensajes sin responder
+                const userGroups=Object.entries(byUser).sort(([,a],[,b])=>{
+                    const aUnread=a.msgs.filter(m=>!m.reply).length;
+                    const bUnread=b.msgs.filter(m=>!m.reply).length;
+                    return bUnread-aUnread;
+                });
+                msgsEl.innerHTML=userGroups.map(([uid,group])=>{
+                    const unread=group.msgs.filter(m=>!m.reply).length;
+                    const total=group.msgs.length;
+                    const lastMsg=group.msgs[group.msgs.length-1];
+                    const lastTs=lastMsg.timestamp?.toDate?.();
+                    const lastHora=lastTs?lastTs.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+                    const safeUid=uid.replace(/[^a-zA-Z0-9]/g,'_');
+                    const thread=group.msgs.map(m=>{
+                        const ts=m.timestamp?.toDate?.();
+                        const hora=ts?ts.toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+                        return `<div style="margin-bottom:8px;">
+                            <div style="background:var(--accent-light);border-radius:7px;padding:8px 10px;margin-bottom:3px;">
+                                <div style="font-size:9px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:3px;">ALUMNO · ${hora}</div>
+                                <div style="font-size:12px;color:var(--text);">${escapeHtml(m.text||'')}</div>
+                            </div>
+                            ${m.reply?`<div style="background:#f0fdf4;border-radius:7px;padding:8px 10px;margin-left:16px;">
+                                <div style="font-size:9px;font-weight:700;color:var(--green);font-family:'Space Mono',monospace;margin-bottom:3px;">PROFE</div>
+                                <div style="font-size:12px;color:var(--text);">${escapeHtml(m.reply)}</div>
+                            </div>`:
+                            `<div style="margin-left:16px;display:flex;gap:6px;margin-top:3px;">
+                                <input type="text" id="reply-${m.id}" placeholder="Responder a este mensaje..." style="flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;background:var(--bg);">
+                                <button onclick="sendAdminReply('${m.id}','${escapeHtml(m.email||'')}')" style="background:var(--accent);color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">Responder</button>
+                            </div>`}
+                        </div>`;
+                    }).join('');
+                    return `<div style="border:1.5px solid ${unread?'var(--accent)':'var(--border)'};border-radius:10px;margin-bottom:10px;overflow:hidden;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:${unread?'var(--accent-light)':'var(--bg)'};cursor:pointer;" onclick="toggleThread('${safeUid}')">
+                            <div>
+                                <span style="font-size:12px;font-weight:700;color:var(--text);">👤 ${escapeHtml(group.name||group.email)}</span>
+                                <span style="font-size:10px;color:var(--muted);margin-left:7px;">${escapeHtml(group.email)}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:7px;">
+                                ${unread?`<span style="background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:'Space Mono',monospace;">${unread} sin responder</span>`:''}
+                                <span style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;">${total} msj · ${lastHora}</span>
+                                <span style="font-size:12px;color:var(--muted);" id="chevron-${safeUid}">▼</span>
+                            </div>
                         </div>
-                        <div style="font-size:12px;margin-bottom:8px;">${escapeHtml(m.text||'')}</div>
-                        ${m.reply?`<div style="background:#f0fdf4;border-left:3px solid var(--green);padding:6px 8px;font-size:11px;border-radius:4px;"><strong style='color:var(--green);'>Tu respuesta:</strong> ${escapeHtml(m.reply)}</div>`:''}
-                        ${!m.reply?`<div style="display:flex;gap:6px;margin-top:6px;">
-                            <input type="text" id="reply-${m.id}" placeholder="Escribí tu respuesta..." style="flex:1;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;">
-                            <button onclick="sendAdminReply('${m.id}','${escapeHtml(m.email||'')}')" style="background:var(--accent);color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Responder</button>
-                        </div>`:''}
+                        <div id="thread-${safeUid}" style="padding:10px 12px;display:none;">
+                            ${thread}
+                        </div>
                     </div>`;
                 }).join('');
             }
@@ -1227,9 +1267,18 @@ async function loadAdminData(panel){
         const el=document.getElementById('admin-msgs-content');
         if(el)el.innerHTML='<p style="font-size:11px;color:var(--red)">Error cargando mensajes: '+e2.message+'</p>';
     }
-    }catch(e){
+        }catch(e){
         panel.innerHTML=`<div style="padding:40px;text-align:center;color:var(--red)">Error: ${e.message}</div>`;
     }
+}
+
+function toggleThread(uid){
+    const thread=document.getElementById('thread-'+uid);
+    const chevron=document.getElementById('chevron-'+uid);
+    if(!thread)return;
+    const open=thread.style.display==='block';
+    thread.style.display=open?'none':'block';
+    if(chevron)chevron.textContent=open?'▼':'▲';
 }
 
 async function sendAdminReply(msgId, userEmail){
