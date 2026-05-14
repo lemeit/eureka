@@ -1,0 +1,28 @@
+# ── SECRETOS — NUNCA subir ──────────────────────────
+.env
+.env.local
+secrets.txt
+api_keys.txt
+
+# ── ARCHIVOS LOCALES (no son parte de la app web) ───
+worker.js
+flyer_*.html
+flyer_final.html
+
+# ── EDITORES ────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── SISTEMA OPERATIVO ───────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# ── NODE (por si se usa algo local algún día) ───────
+node_modules/
+npm-debug.log*
