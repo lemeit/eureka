@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Flyer · Clases Particulares</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  background:#dce8f0;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:20px;
+  font-family:'DM Sans',sans-serif;
+}
+
+/* ── FLYER: 105mm × 148mm (A6) → pantalla ~397×558px ── */
+.flyer{
+  width:397px;
+  background:#fafaf7;
+  border-radius:4px;
+  overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,.18);
+  display:flex;flex-direction:column;
+}
+
+/* ── FRANJA SUPERIOR ── */
+.top{
+  background:#2a7a6e;
+  padding:20px 24px 16px;
+  position:relative;
+  overflow:hidden;
+}
+.top::after{
+  content:'';
+  position:absolute;right:-40px;top:-40px;
+  width:160px;height:160px;
+  border-radius:50%;
+  background:rgba(255,255,255,.06);
+  pointer-events:none;
+}
+.app-name{
+  font-family:'DM Serif Display',serif;
+  font-size:34px;color:#fff;line-height:1;
+  letter-spacing:-0.5px;
+  margin-bottom:2px;
+}
+.app-name sup{
+  font-family:'DM Sans',sans-serif;
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  background:rgba(255,255,255,.25);
+  padding:2px 5px;border-radius:2px;
+  vertical-align:super;margin-left:4px;
+}
+.tagline{
+  font-size:11px;font-weight:500;
+  color:rgba(255,255,255,.82);letter-spacing:.3px;
+}
+
+/* ── PREGUNTA GANCHO ── */
+.hook{
+  padding:18px 24px 0;
+}
+.hook-q{
+  font-family:'DM Serif Display',serif;
+  font-size:22px;color:#1a1a2e;
+  line-height:1.2;margin-bottom:4px;
+}
+.hook-q em{color:#2a7a6e;font-style:normal;}
+.hook-sub{
+  font-size:11.5px;font-weight:500;color:#5a5a70;
+  line-height:1.4;
+}
+
+/* ── MATERIAS ── */
+.section{padding:14px 24px 0;}
+.section-label{
+  font-size:8.5px;font-weight:700;letter-spacing:1.4px;
+  text-transform:uppercase;color:#9090a0;margin-bottom:7px;
+}
+.materias-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;
+}
+.mat{
+  background:#e8f5f2;
+  border-radius:3px;
+  padding:5px 9px;
+  font-size:11px;font-weight:600;color:#1e6058;
+  line-height:1.3;
+}
+.mat.alt{
+  background:#fff5e8;color:#8a4500;
+}
+
+/* ── NIVELES ── */
+.niveles{
+  display:flex;flex-wrap:wrap;gap:4px;
+}
+.niv{
+  font-size:9px;font-weight:600;
+  background:#f0eee8;border:1px solid #d8d4cc;
+  color:#3a3830;padding:3px 8px;border-radius:20px;
+  letter-spacing:.2px;
+}
+
+/* ── PROPUESTA ── */
+.props{
+  list-style:none;display:flex;flex-direction:column;gap:6px;
+}
+.prop{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:11px;font-weight:500;color:#2a2830;line-height:1.4;
+}
+.prop-dot{
+  width:20px;height:20px;border-radius:3px;
+  background:#2a7a6e;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;flex-shrink:0;margin-top:1px;
+}
+.prop-dot.g{background:#1a9e5c;}
+.prop-dot.o{background:#e07c1a;}
+
+/* ── CTA ── */
+.cta{
+  margin:16px 24px 0;
+  background:#eaf5f3;
+  border:1.5px solid #2a7a6e;
+  border-radius:4px;
+  padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;
+}
+.cta-left{
+  font-size:11.5px;font-weight:700;color:#1a1a2e;line-height:1.35;
+}
+.cta-left span{
+  font-size:9.5px;font-weight:500;color:#2a7a6e;display:block;margin-top:1px;
+  font-style:italic;
+}
+.cta-qr{
+  display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;
+}
+.qr-box{
+  width:68px;height:68px;
+  background:#1a2e2a;
+  border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.qr-lbl{font-size:7.5px;font-weight:700;color:#2a7a6e;letter-spacing:.5px;text-align:center;}
+.qr-url{font-size:6.5px;color:#7a7a8a;text-align:center;}
+
+/* ── SEPARADOR ── */
+.sep{margin:14px 24px 0;border:none;border-top:1px solid #e4e0d8;}
+
+/* ── CONTACTO ── */
+.contact{
+  padding:10px 24px;
+  display:flex;align-items:center;gap:14px;
+}
+.contact-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;color:#2a2830;
+}
+.c-ico{
+  width:20px;height:20px;border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8.5px;font-weight:800;color:#fff;flex-shrink:0;
+}
+.c-ico.wa{background:#25d366;}
+.c-ico.ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);}
+
+/* ── FOOTER ── */
+.footer{
+  background:#2a7a6e;
+  padding:5px 24px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer span{font-size:7.5px;color:rgba(255,255,255,.75);font-weight:500;letter-spacing:.3px;}
+
+/* ── PRINT ── */
+@media print{
+  body{background:none;padding:0;display:block;}
+  .flyer{
+    width:105mm;
+    box-shadow:none;border-radius:0;
+    page-break-inside:avoid;
+  }
+  .top,.cta,.footer,
+  .mat,.niv,.prop-dot,.c-ico{
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+}
+</style>
+</head>
+<body>
+<div class="flyer">
+
+  <!-- FRANJA SUPERIOR -->
+  <div class="top">
+    <div class="app-name">Eureka<sup>AI β</sup></div>
+    <div class="tagline">Tutor de Física y Química · Asistido por Inteligencia Artificial</div>
+  </div>
+
+  <!-- GANCHO -->
+  <div class="hook">
+    <div class="hook-q">¿Tenés un examen de<br><em>Física o Química?</em></div>
+    <div class="hook-sub">Clases particulares + tutor IA disponible las 24 h.</div>
+  </div>
+
+  <!-- MATERIAS -->
+  <div class="section">
+    <div class="section-label">Materias disponibles</div>
+    <div class="materias-grid">
+      <div class="mat">⚛ Física</div>
+      <div class="mat">⚗ Química</div>
+      <div class="mat">🔬 Fisicoquímica</div>
+      <div class="mat">🧬 Química Orgánica</div>
+      <div class="mat alt">🩺 Medicina · Veterinaria</div>
+      <div class="mat alt">🌾 Agronomía</div>
+      <div class="mat alt" style="grid-column:1/-1;">📐 Cursos de ingreso · Nivelatorios</div>
+    </div>
+  </div>
+
+  <!-- NIVELES -->
+  <div class="section">
+    <div class="section-label">Para quién</div>
+    <div class="niveles">
+      <span class="niv">Secundario</span>
+      <span class="niv">Terciario</span>
+      <span class="niv">Cursos de ingreso</span>
+      <span class="niv">CBC / UBA XXI</span>
+      <span class="niv">UTN</span>
+      <span class="niv">UNLP</span>
+      <span class="niv">UNICEN</span>
+    </div>
+  </div>
+
+  <!-- PROPUESTA -->
+  <div class="section">
+    <div class="section-label">¿Qué ofrezco?</div>
+    <ul class="props">
+      <li class="prop">
+        <div class="prop-dot">IA</div>
+        Consultá el tutor IA gratis · respuestas paso a paso con fórmulas y gráficos
+      </li>
+      <li class="prop">
+        <div class="prop-dot o">★</div>
+        Clases presenciales u online · a convenir
+      </li>
+    </ul>
+  </div>
+
+  <!-- CTA + QR -->
+  <div class="cta">
+    <div class="cta-left">
+      Escaneá el QR y empezá gratis
+      <span>lemeit.github.io/eureka</span>
+    </div>
+    <div class="cta-qr">
+      <div class="qr-box">
+        <!-- Reemplazar con <img src="qr.png" alt="QR"> -->
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+          <rect width="80" height="80" fill="#1a2e2a"/>
+          <rect x="8" y="8" width="24" height="24" fill="none" stroke="#fff" stroke-width="3"/>
+          <rect x="14" y="14" width="12" height="12" fill="#fff"/>
+          <rect x="48" y="8" width="24" height="24" fill="none" stroke="#fff" stroke-width="3"/>
+          <rect x="54" y="14" width="12" height="12" fill="#fff"/>
+          <rect x="8" y="48" width="24" height="24" fill="none" stroke="#fff" stroke-width="3"/>
+          <rect x="14" y="54" width="12" height="12" fill="#fff"/>
+          <rect x="48" y="44" width="6" height="6" fill="#fff"/>
+          <rect x="58" y="44" width="6" height="6" fill="#fff"/>
+          <rect x="48" y="54" width="6" height="6" fill="#fff"/>
+          <rect x="58" y="54" width="6" height="6" fill="#fff"/>
+          <rect x="48" y="64" width="6" height="6" fill="#fff"/>
+          <rect x="36" y="8" width="6" height="6" fill="#fff"/>
+          <rect x="36" y="20" width="6" height="6" fill="#fff"/>
+          <rect x="36" y="36" width="6" height="6" fill="#fff"/>
+          <rect x="36" y="50" width="6" height="6" fill="#fff"/>
+          <rect x="36" y="62" width="6" height="6" fill="#fff"/>
+          <rect x="68" y="56" width="6" height="6" fill="#fff"/>
+        </svg>
+      </div>
+      <div class="qr-lbl">↑ Escaneá</div>
+      <div class="qr-url">lemeit.github.io/eureka</div>
+    </div>
+  </div>
+
+  <!-- PIE UNIFICADO -->
+  <div style="background:#2a7a6e;padding:10px 24px 11px;">
+    <div style="font-size:9.5px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.3px;margin-bottom:6px;">
+      Prof. Ing. Químico · Docente universitario
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="width:20px;height:20px;border-radius:3px;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:#fff;flex-shrink:0;">WA</div>
+        <span style="font-size:11px;font-weight:700;color:#fff;">+54 9 2344 546 609</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="width:20px;height:20px;border-radius:3px;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:#fff;flex-shrink:0;">ig</div>
+        <span style="font-size:11px;font-weight:700;color:#fff;">@lemeitok</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
