@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Eureka-AI · Flyer v5 · Impresión</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── PANTALLA: centrado ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+    background:#d0cdc6;
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;padding:20px;
+    font-family:'Nunito',sans-serif;
+}
+
+/* ── FLYER: mitad A4 = 105mm × 148mm → pantalla ~396×558px a 96dpi ── */
+.flyer{
+    width:396px;
+    background:#ffffff;
+    border-radius:6px;
+    overflow:hidden;
+    box-shadow:0 6px 30px rgba(0,0,0,.25);
+    display:flex;flex-direction:column;
+}
+
+/* ── FRANJA SUPERIOR AZUL ── */
+.top-bar{
+    background:#1a3aa8;
+    padding:18px 22px 14px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+}
+/* círculo decorativo */
+.top-bar::after{
+    content:'';
+    position:absolute;right:-30px;top:-30px;
+    width:130px;height:130px;
+    border-radius:50%;
+    background:rgba(255,255,255,.07);
+    pointer-events:none;
+}
+.top-bar::before{
+    content:'';
+    position:absolute;right:20px;bottom:-20px;
+    width:80px;height:80px;
+    border-radius:50%;
+    background:rgba(255,255,255,.05);
+    pointer-events:none;
+}
+
+.brand-row{display:flex;align-items:baseline;gap:6px;margin-bottom:2px;}
+.brand-name{
+    font-size:32px;font-weight:900;
+    color:#fff;letter-spacing:-1px;line-height:1;
+}
+.brand-ai{
+    font-size:13px;font-weight:800;
+    background:#4f7ef8;color:#fff;
+    padding:2px 6px;border-radius:3px;
+    letter-spacing:.3px;
+}
+.brand-beta{
+    font-size:9px;font-weight:700;
+    background:rgba(255,255,255,.2);color:rgba(255,255,255,.9);
+    padding:1px 5px;border-radius:2px;letter-spacing:.5px;
+}
+.brand-tagline{font-size:10.5px;color:rgba(255,255,255,.8);font-weight:600;letter-spacing:.2px;}
+
+/* ── CUERPO BLANCO ── */
+.body{padding:16px 22px 14px;flex:1;}
+
+.headline{
+    font-size:21px;font-weight:900;
+    color:#1a1814;line-height:1.15;
+    margin-bottom:3px;
+}
+.headline .hl{color:#1a3aa8;}
+
+.sub{
+    font-size:12px;font-weight:600;color:#5a5650;
+    line-height:1.4;margin-bottom:14px;
+}
+
+/* materias */
+.materias-title{
+    font-size:9.5px;font-weight:800;letter-spacing:1.2px;
+    text-transform:uppercase;color:#8a8680;margin-bottom:7px;
+}
+.materias-grid{
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:4px;margin-bottom:14px;
+}
+.mat{
+    background:#f0f3fd;border-left:3px solid #1a3aa8;
+    border-radius:3px;padding:4px 8px;
+    font-size:10.5px;font-weight:700;color:#1a3aa8;
+    line-height:1.25;
+}
+.mat.alt{background:#fff8ee;border-color:#b45309;color:#7c3a06;}
+
+/* niveles */
+.niveles{
+    display:flex;flex-wrap:wrap;gap:3px;margin-bottom:14px;
+}
+.niv{
+    font-size:9px;font-weight:800;
+    background:#f0ede6;border:1px solid #c8c3b8;
+    color:#3a3630;padding:2px 7px;border-radius:2px;
+    letter-spacing:.3px;text-transform:uppercase;
+}
+
+/* bullets */
+.bullets{list-style:none;margin-bottom:14px;}
+.bullets li{
+    font-size:11px;font-weight:600;color:#2a2620;
+    padding:2.5px 0;display:flex;align-items:flex-start;gap:7px;
+    line-height:1.35;
+}
+.bull-icon{
+    width:16px;height:16px;border-radius:3px;
+    background:#1a3aa8;color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;font-weight:800;flex-shrink:0;margin-top:1px;
+}
+.bull-icon.amber{background:#b45309;}
+.bull-icon.green{background:#15803d;}
+
+/* CTA */
+.cta-row{
+    background:#1a3aa8;border-radius:4px;
+    padding:9px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;
+}
+.cta-text{color:#fff;font-size:11px;font-weight:800;line-height:1.3;}
+.cta-text span{font-size:9px;font-weight:600;opacity:.85;display:block;}
+.cta-arrow{
+    width:26px;height:26px;border-radius:3px;
+    background:rgba(255,255,255,.2);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:900;flex-shrink:0;
+}
+
+/* ── FRANJA PROFE ── */
+.profe-bar{
+    background:#f7f5f0;border-top:1px solid #e0ddd6;
+    padding:12px 22px;
+    display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+}
+.profe-left{}
+.profe-label{font-size:8.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#8a8680;margin-bottom:2px;}
+.profe-name{font-size:16px;font-weight:900;color:#1a1814;line-height:1;margin-bottom:1px;}
+.profe-titulo{font-size:9.5px;font-weight:700;color:#1a3aa8;margin-bottom:7px;}
+.contact-row{display:flex;flex-direction:column;gap:3px;}
+.contact-item{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:#2a2620;}
+.c-icon{
+    width:18px;height:18px;border-radius:3px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;font-weight:800;color:#fff;flex-shrink:0;
+}
+.c-icon.wa{background:#25d366;}
+.c-icon.ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);}
+
+/* QR */
+.qr-col{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.qr-frame{
+    width:76px;height:76px;
+    background:#1a1814;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+}
+.qr-frame img{width:100%;height:100%;object-fit:cover;}
+.qr-label{font-size:8px;font-weight:800;color:#1a3aa8;letter-spacing:.5px;text-transform:uppercase;text-align:center;}
+.qr-url{font-size:7px;color:#8a8680;font-weight:600;text-align:center;word-break:break-all;}
+
+/* ── FOOTER ── */
+.footer{
+    background:#1a1814;padding:6px 22px;
+    display:flex;justify-content:space-between;align-items:center;
+}
+.footer span{font-size:8px;color:#8a8680;font-weight:600;letter-spacing:.3px;}
+.footer .dot{color:#4f7ef8;}
+
+/* ── PRINT ── */
+@media print{
+    body{background:none;padding:0;display:block;}
+    .flyer{
+        width:105mm;
+        box-shadow:none;border-radius:0;
+        page-break-inside:avoid;
+    }
+    /* forzar impresión de fondos */
+    .top-bar,.cta-row,.footer{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .mat,.niv,.c-icon,.bull-icon,.brand-ai,.profe-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head>
+<body>
+<div class="flyer">
+
+    <!-- FRANJA SUPERIOR -->
+    <div class="top-bar">
+        <div class="brand-row">
+            <span class="brand-name">Eureka</span>
+            <span class="brand-ai">AI</span>
+            <span class="brand-beta">β</span>
+        </div>
+        <div class="brand-tagline">Tutor de Ciencias Exactas · Asistido por IA</div>
+    </div>
+
+    <!-- CUERPO -->
+    <div class="body">
+
+        <div class="headline">
+            ¿Tenés un examen<br>
+            <span class="hl">de Ciencias Exactas?</span>
+        </div>
+        <div class="sub">O una materia que preparar, rendir o recuperar.</div>
+
+        <div class="materias-title">Materias</div>
+        <div class="materias-grid">
+            <div class="mat">⚛ Física</div>
+            <div class="mat">⚗ Química</div>
+            <div class="mat">🔬 Fisicoquímica</div>
+            <div class="mat">🧬 Q. del Carbono</div>
+            <div class="mat alt">🧫 Biofísica</div>
+            <div class="mat alt">📐 Cursos de ingreso</div>
+        </div>
+
+        <div class="niveles">
+            <span class="niv">Secundario</span>
+            <span class="niv">CBC · UBA XXI</span>
+            <span class="niv">Terciario</span>
+            <span class="niv">UTN</span>
+            <span class="niv">UNLP</span>
+            <span class="niv">UNICEN</span>
+            <span class="niv">Nivelatorio</span>
+        </div>
+
+        <ul class="bullets">
+            <li>
+                <div class="bull-icon">IA</div>
+                Consultá el tutor IA gratis · Respuestas paso a paso con fórmulas
+            </li>
+            <li>
+                <div class="bull-icon amber">★</div>
+                Clases particulares online o presenciales · Saladillo, Bs. As.
+            </li>
+            <li>
+                <div class="bull-icon green">✓</div>
+                Registrate en minutos con tu cuenta Google · Sin tarjeta
+            </li>
+        </ul>
+
+        <div class="cta-row">
+            <div class="cta-text">
+                Escaneá el QR · Empezá gratis
+                <span>lemeit.github.io/eureka</span>
+            </div>
+            <div class="cta-arrow">→</div>
+        </div>
+
+    </div>
+
+    <!-- FRANJA PROFE -->
+    <div class="profe-bar">
+        <div class="profe-left">
+            <div class="profe-label">Profesor universitario</div>
+            <div class="profe-name">Luciano Lamaita</div>
+            <div class="profe-titulo">Ing. Químico · Docente universitario</div>
+            <div class="contact-row">
+                <div class="contact-item">
+                    <div class="c-icon wa">WA</div>
+                    +54 9 2344 546 609
+                </div>
+                <div class="contact-item">
+                    <div class="c-icon ig">ig</div>
+                    @lemeitok
+                </div>
+            </div>
+        </div>
+        <div class="qr-col">
+            <div class="qr-frame">
+                <!-- Reemplazá con: <img src="qr.png" alt="QR"> -->
+                <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" width="76" height="76">
+                    <rect width="80" height="80" fill="#1a1814"/>
+                    <rect x="8" y="8" width="24" height="24" fill="none" stroke="#fff" stroke-width="3"/>
+                    <rect x="14" y="14" width="12" height="12" fill="#fff"/>
+                    <rect x="48" y="8" width="24" height="24" fill="none" stroke="#fff" stroke-width="3"/>
+                    <rect x="54" y="14" width="12" height="12" fill="#fff"/>
+                    <rect x="8" y="48" width="24" height="24" fill="none" stroke="#fff" stroke-width="3"/>
+                    <rect x="14" y="54" width="12" height="12" fill="#fff"/>
+                    <rect x="48" y="44" width="6" height="6" fill="#fff"/>
+                    <rect x="58" y="44" width="6" height="6" fill="#fff"/>
+                    <rect x="48" y="54" width="6" height="6" fill="#fff"/>
+                    <rect x="58" y="54" width="6" height="6" fill="#fff"/>
+                    <rect x="48" y="64" width="6" height="6" fill="#fff"/>
+                    <rect x="58" y="64" width="6" height="6" fill="#fff"/>
+                    <rect x="36" y="8" width="6" height="6" fill="#fff"/>
+                    <rect x="36" y="18" width="6" height="6" fill="#fff"/>
+                    <rect x="36" y="36" width="6" height="6" fill="#fff"/>
+                    <rect x="36" y="48" width="6" height="6" fill="#fff"/>
+                    <rect x="36" y="60" width="6" height="6" fill="#fff"/>
+                </svg>
+            </div>
+            <div class="qr-label">↑ Escaneá</div>
+            <div class="qr-url">lemeit.github.io/<br>eureka</div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <span>Prof. Ing. Luciano Lamaita<span class="dot"> · </span>Saladillo, Buenos Aires</span>
+        <span>Eureka<span class="dot">-AI</span></span>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Motor de documentación
+jupyter-book>=0.15.1
+sphinx-book-theme>=1.0.1
+myst-parser>=1.0.0
+
+# Edición interactiva
+jupyterlab>=4.0.0
+jupyterlab-myst>=2.0.0
+
+# Computación científica (para gráficos de física)
+numpy
+matplotlib
+pandas
+plotly
+
+# Utilidades
+ghp-import  # Para subir a GitHub Pages fácilmente
