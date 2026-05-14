@@ -858,16 +858,13 @@ async function checkPendingReplies(user){
     try{
         const snap=await db.collection('messages')
             .where('uid','==',user.uid)
-            .where('reply','!=','')
-            .orderBy('reply')
             .orderBy('timestamp','desc')
-            .limit(3)
+            .limit(5)
             .get();
-        if(snap.empty)return;
-        // Mostrar solo las no vistas (replyRead != true)
-        const unread=snap.docs.filter(d=>!d.data().replyRead);
+        const unread=snap.docs.filter(d=>d.data().reply&&!d.data().replyRead);
         if(unread.length===0)return;
         const box=document.getElementById('chat-box');
+        if(document.getElementById('reply-notif-el'))return;
         const notif=document.createElement('div');
         notif.className='reply-notification';
         notif.id='reply-notif-el';
@@ -889,40 +886,9 @@ async function checkPendingReplies(user){
             </div>`;
         box.appendChild(notif);
         box.scrollTop=box.scrollHeight;
-        // Marcar como leídas en Firestore
         unread.forEach(d=>d.ref.update({replyRead:true}).catch(()=>{}));
     }catch(e){
-        // Si falla el índice, intentar query simple
-        try{
-            const snap2=await db.collection('messages')
-                .where('uid','==',user.uid)
-                .orderBy('timestamp','desc')
-                .limit(5)
-                .get();
-            const unread2=snap2.docs.filter(d=>d.data().reply&&!d.data().replyRead);
-            if(unread2.length===0)return;
-            const box=document.getElementById('chat-box');
-            const notif=document.createElement('div');
-            notif.className='reply-notification';
-            notif.id='reply-notif-el';
-            const items=unread2.map(d=>{
-                const m=d.data();
-                return `<div class="reply-item">
-                    <div class="reply-msg">Tu consulta: "${escapeHtml((m.text||'').slice(0,60))}${m.text?.length>60?'...':''}"</div>
-                    <div class="reply-text">${escapeHtml(m.reply||'')}</div>
-                </div>`;
-            }).join('');
-            notif.innerHTML=`
-                <h3>📬 Respuesta del Profe</h3>
-                ${items}
-                <div class="reply-actions">
-                    <button class="btn-send-msg" onclick="markRepliesRead();showMsgPanel()">Ver mis mensajes</button>
-                    <button class="btn-close-msg" onclick="markRepliesRead()">Cerrar</button>
-                </div>`;
-            box.appendChild(notif);
-            box.scrollTop=box.scrollHeight;
-            unread2.forEach(d=>d.ref.update({replyRead:true}).catch(()=>{}));
-        }catch(e2){console.warn('checkPendingReplies fallback error:',e2);}
+        console.warn('checkPendingReplies error:',e.message);
     }
 }
 
