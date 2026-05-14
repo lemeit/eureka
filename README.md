@@ -170,7 +170,7 @@ Todas están en `index.html` como constantes JS al inicio del `<script>`:
 | `WORKER_URL` | URL del Cloudflare Worker | `https://eureka-proxy.fisicai-eureka-01.workers.dev` |
 | `MAX_QUERIES` | Consultas de texto por usuario por día | `3` |
 | `MAX_UPLOADS` | Archivos subidos por usuario por día | `1` |
-| `ADMIN_EMAIL` | Email con acceso al panel admin | `user@gmail.com` |
+| `ADMIN_EMAIL` | Email con acceso al panel admin | `TU_EMAIL_ADMIN@gmail.com` |
 
 ---
 
