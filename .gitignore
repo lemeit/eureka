@@ -1,0 +1,25 @@
+# --- Seguridad ---
+# NO subir nunca las claves de API (Groq, etc.)
+.env
+keys.py
+secrets.toml
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# --- Streamlit ---
+# Si usas la carpeta de configuración local de Streamlit
+.streamlit/
+
+# --- Documentación y Diseño ---
+# Ignoramos los archivos pesados originales, ya que los editados van en /docs
+flyer-clases (1).png
+
+# --- Sistema ---
+.DS_Store
+Thumbs.db
