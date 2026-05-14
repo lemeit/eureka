@@ -257,6 +257,34 @@
         .fp-btn.primary{background:var(--accent);color:#fff;}
         .fp-btn.wa{background:#25d366;color:#fff;}
 
+
+        /* ── NOTIFICACIÓN RESPUESTA DEL PROFE ── */
+        .reply-notification{background:#f0fdf4;border:1.5px solid #22c55e;border-radius:var(--radius);padding:14px 16px;max-width:520px;align-self:flex-start;animation:slideUp .4s ease;}
+        .reply-notification h3{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+        .reply-notification .reply-item{background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid #86efac;}
+        .reply-notification .reply-msg{font-size:12px;color:var(--muted);margin-bottom:6px;font-style:italic;}
+        .reply-notification .reply-text{font-size:13px;font-weight:600;color:var(--text);border-left:3px solid var(--green);padding-left:8px;}
+        .reply-notification .reply-date{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:4px;}
+        .reply-notification .reply-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;}
+        .msg-panel-full{background:var(--surface);border:1.5px solid #86efac;border-radius:var(--radius);padding:16px;max-width:520px;align-self:flex-start;}
+        .msg-panel-full h3{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--green);margin-bottom:12px;}
+        .msg-history{max-height:200px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;}
+        .msg-history-item{border-radius:8px;padding:9px 11px;}
+        .msg-history-item.sent{background:var(--accent-light);border:1px solid #c7d4f8;}
+        .msg-history-item.replied{background:#f0fdf4;border:1px solid #86efac;}
+        .msg-history-item .mh-label{font-size:9px;font-weight:700;font-family:'Space Mono',monospace;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+        .msg-history-item.sent .mh-label{color:var(--accent);}
+        .msg-history-item.replied .mh-label{color:var(--green);}
+        .msg-history-item .mh-text{font-size:12px;color:var(--text);line-height:1.4;}
+        .msg-history-item .mh-date{font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:3px;}
+        .msg-new-wrap{display:flex;flex-direction:column;gap:6px;}
+        .msg-new-wrap textarea{border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:'DM Sans',sans-serif;resize:none;outline:none;background:var(--bg);min-height:70px;transition:border-color .15s;}
+        .msg-new-wrap textarea:focus{border-color:var(--green);background:#fff;}
+        .msg-new-wrap .msg-send-row{display:flex;gap:7px;justify-content:flex-end;}
+        .btn-send-msg{background:var(--green);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;}
+        .btn-send-msg:hover{opacity:.85;}
+        .btn-close-msg{background:var(--bg);color:var(--muted);border:1px solid var(--border);padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+        .msg-status-line{font-size:11px;font-family:'Space Mono',monospace;text-align:center;min-height:14px;}
         /* ── CRÉDITOS EXTRA ── */
         .credits-banner{background:var(--accent-light);border:1.5px solid var(--accent);border-radius:var(--radius);padding:14px 16px;max-width:520px;align-self:flex-start;}
         .credits-banner h3{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;}
@@ -587,6 +615,7 @@ function showChat(user,firstName){
 
     checkAndDisableInput(user.uid);
     initPopup();
+    checkPendingReplies(user);
 }
 
 async function checkAndDisableInput(uid){
@@ -718,43 +747,134 @@ function clearChat(){
     }
 }
 
-// ── PANEL DE MENSAJES ────────────────────────────────────────────────────────
+// ── PANEL DE MENSAJES MEJORADO ──────────────────────────────────────────────
+
+// Chequear respuestas pendientes al iniciar sesión y mostrarlas en el chat
+async function checkPendingReplies(user){
+    try{
+        const snap=await db.collection('messages')
+            .where('uid','==',user.uid)
+            .where('reply','!=','')
+            .orderBy('reply')
+            .orderBy('timestamp','desc')
+            .limit(3)
+            .get();
+        if(snap.empty)return;
+        // Mostrar solo las no vistas (replyRead != true)
+        const unread=snap.docs.filter(d=>!d.data().replyRead);
+        if(unread.length===0)return;
+        const box=document.getElementById('chat-box');
+        const notif=document.createElement('div');
+        notif.className='reply-notification';
+        notif.id='reply-notif-el';
+        const items=unread.map(d=>{
+            const m=d.data();
+            const fecha=m.repliedAt?.toDate?m.repliedAt.toDate().toLocaleDateString('es-AR'):'';
+            return `<div class="reply-item">
+                <div class="reply-msg">Tu consulta: "${escapeHtml((m.text||'').slice(0,60))}${m.text?.length>60?'...':''}"</div>
+                <div class="reply-text">${escapeHtml(m.reply||'')}</div>
+                ${fecha?`<div class="reply-date">${fecha}</div>`:''}
+            </div>`;
+        }).join('');
+        notif.innerHTML=`
+            <h3>📬 Respuesta del Profe</h3>
+            ${items}
+            <div class="reply-actions">
+                <button class="btn-send-msg" onclick="markRepliesRead();showMsgPanel()">Ver todos mis mensajes</button>
+                <button class="btn-close-msg" onclick="markRepliesRead()">Cerrar</button>
+            </div>`;
+        box.appendChild(notif);
+        box.scrollTop=box.scrollHeight;
+        // Marcar como leídas en Firestore
+        unread.forEach(d=>d.ref.update({replyRead:true}).catch(()=>{}));
+    }catch(e){
+        // Si falla el índice, intentar query simple
+        try{
+            const snap2=await db.collection('messages')
+                .where('uid','==',user.uid)
+                .orderBy('timestamp','desc')
+                .limit(5)
+                .get();
+            const unread2=snap2.docs.filter(d=>d.data().reply&&!d.data().replyRead);
+            if(unread2.length===0)return;
+            const box=document.getElementById('chat-box');
+            const notif=document.createElement('div');
+            notif.className='reply-notification';
+            notif.id='reply-notif-el';
+            const items=unread2.map(d=>{
+                const m=d.data();
+                return `<div class="reply-item">
+                    <div class="reply-msg">Tu consulta: "${escapeHtml((m.text||'').slice(0,60))}${m.text?.length>60?'...':''}"</div>
+                    <div class="reply-text">${escapeHtml(m.reply||'')}</div>
+                </div>`;
+            }).join('');
+            notif.innerHTML=`
+                <h3>📬 Respuesta del Profe</h3>
+                ${items}
+                <div class="reply-actions">
+                    <button class="btn-send-msg" onclick="markRepliesRead();showMsgPanel()">Ver mis mensajes</button>
+                    <button class="btn-close-msg" onclick="markRepliesRead()">Cerrar</button>
+                </div>`;
+            box.appendChild(notif);
+            box.scrollTop=box.scrollHeight;
+            unread2.forEach(d=>d.ref.update({replyRead:true}).catch(()=>{}));
+        }catch(e2){console.warn('checkPendingReplies fallback error:',e2);}
+    }
+}
+
+function markRepliesRead(){
+    document.getElementById('reply-notif-el')?.remove();
+}
+
 async function showMsgPanel(){
     const user=auth.currentUser;if(!user)return;
     const box=document.getElementById('chat-box');
-
-    // Verificar si ya hay un panel abierto
     if(document.getElementById('msg-panel-el'))return;
 
-    // Cargar mensajes previos del usuario
-    const snap=await db.collection('messages')
-        .where('uid','==',user.uid)
-        .orderBy('timestamp','desc')
-        .limit(5)
-        .get().catch(()=>null);
+    // Cargar mensajes del usuario ordenados por fecha
+    let msgs=[];
+    try{
+        const snap=await db.collection('messages')
+            .where('uid','==',user.uid)
+            .orderBy('timestamp','asc')
+            .limit(10)
+            .get();
+        msgs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    }catch(e){console.warn('showMsgPanel query error:',e);}
 
-    const msgs=snap?snap.docs.map(d=>d.data()):[];
-    const msgsHtml=msgs.length?msgs.map(m=>`
-        <div style="margin-bottom:10px;">
-            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:3px;">${'${new Date(m.timestamp?.toDate()).toLocaleDateString("es-AR")}'} — Vos</div>
-            <div style="font-size:12px;background:var(--bg);padding:7px 10px;border-radius:6px;">${escapeHtml(m.text||'')}</div>
-            ${m.reply?`<div class="msg-reply"><strong>STAY (Prof.):</strong>${escapeHtml(m.reply)}</div>`:''}
-        </div>`).join(''):'<p style="font-size:12px;color:var(--muted)">No tenés mensajes anteriores.</p>';
+    const historyHtml=msgs.length?msgs.map(m=>{
+        const fecha=m.timestamp?.toDate?m.timestamp.toDate().toLocaleDateString('es-AR'):'';
+        return `<div class="msg-history-item sent">
+            <div class="mh-label">Vos · ${fecha}</div>
+            <div class="mh-text">${escapeHtml(m.text||'')}</div>
+        </div>
+        ${m.reply?`<div class="msg-history-item replied">
+            <div class="mh-label">Profe</div>
+            <div class="mh-text">${escapeHtml(m.reply)}</div>
+        </div>`:''}`;
+    }).join(''):'<p style="font-size:12px;color:var(--muted);text-align:center;padding:10px 0">No hay mensajes previos.</p>';
 
     const panel=document.createElement('div');
     panel.id='msg-panel-el';
-    panel.className='msg-system-bubble';
+    panel.className='msg-panel-full';
     panel.innerHTML=`
         <h3>✉ Mensajes con el Profe</h3>
-        <div style="max-height:160px;overflow-y:auto;margin-bottom:10px;">${msgsHtml}</div>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">Dejá tu consulta y te respondemos a la brevedad.</p>
-        <div class="msg-input-wrap">
-            <textarea id="msg-text-input" placeholder="Escribí tu mensaje o consulta..." rows="2"></textarea>
-            <button onclick="sendUserMessage()">Enviar</button>
-        </div>
-        <div id="msg-status" style="font-size:11px;color:var(--green);margin-top:6px;"></div>`;
+        <div class="msg-history" id="msg-history-box">${historyHtml}</div>
+        <div class="msg-new-wrap">
+            <textarea id="msg-text-input" placeholder="Escribí tu consulta o mensaje al profe…"></textarea>
+            <div class="msg-send-row">
+                <button class="btn-close-msg" onclick="document.getElementById('msg-panel-el')?.remove()">Cerrar</button>
+                <button class="btn-send-msg" onclick="sendUserMessage()">Enviar mensaje</button>
+            </div>
+            <div class="msg-status-line" id="msg-status"></div>
+        </div>`;
     box.appendChild(panel);
-    box.scrollTop=box.scrollHeight;
+    // Scroll al fondo del historial
+    setTimeout(()=>{
+        const h=document.getElementById('msg-history-box');
+        if(h)h.scrollTop=h.scrollHeight;
+        box.scrollTop=box.scrollHeight;
+    },50);
 }
 
 async function sendUserMessage(){
@@ -764,6 +884,7 @@ async function sendUserMessage(){
     if(!text)return;
     const statusEl=document.getElementById('msg-status');
     statusEl.textContent='Enviando…';
+    statusEl.style.color='var(--muted)';
     try{
         await db.collection('messages').add({
             uid:user.uid,
@@ -771,12 +892,22 @@ async function sendUserMessage(){
             name:user.displayName||'',
             text:text,
             reply:'',
+            replyRead:false,
             read:false,
             timestamp:firebase.firestore.FieldValue.serverTimestamp()
         });
         inp.value='';
-        statusEl.textContent='✓ Mensaje enviado. Te respondemos a la brevedad.';
+        statusEl.textContent='✓ Mensaje enviado. El profe te responde a la brevedad.';
         statusEl.style.color='var(--green)';
+        // Agregar el mensaje al historial visible
+        const histBox=document.getElementById('msg-history-box');
+        if(histBox){
+            const newItem=document.createElement('div');
+            newItem.className='msg-history-item sent';
+            newItem.innerHTML=`<div class="mh-label">Vos · ahora</div><div class="mh-text">${escapeHtml(text)}</div>`;
+            histBox.appendChild(newItem);
+            histBox.scrollTop=histBox.scrollHeight;
+        }
     }catch(e){
         statusEl.textContent='Error al enviar: '+e.message;
         statusEl.style.color='var(--red)';
