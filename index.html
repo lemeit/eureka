@@ -325,6 +325,24 @@
         .cb-btn.wa{background:#25d366;color:#fff;}
         .cb-btn.msg{background:var(--accent);color:#fff;}
 
+        /* ── ICONO MENSAJES EN HEADER ── */
+        #msg-header-btn{
+            position:relative;background:var(--bg);border:1px solid var(--border);
+            border-radius:8px;width:34px;height:34px;
+            display:none;align-items:center;justify-content:center;
+            cursor:pointer;transition:border-color .15s, color .15s;
+            flex-shrink:0;color:var(--muted);
+        }
+        #msg-header-btn:hover{border-color:var(--accent);color:var(--accent);}
+        #msg-header-badge{
+            position:absolute;top:-5px;right:-5px;
+            background:var(--red);color:#fff;
+            font-size:9px;font-family:'Space Mono',monospace;font-weight:700;
+            min-width:16px;height:16px;border-radius:99px;
+            display:none;align-items:center;justify-content:center;
+            padding:0 3px;border:1.5px solid var(--surface);
+        }
+
     </style>
 </head>
 <body>
@@ -336,7 +354,15 @@
             <div class="logo-sub">Tutor · Física &amp; Química</div>
         </div>
     </div>
-    <div id="auth-area"></div>
+    <div id="auth-area">
+        <!-- Icono mensajes — se activa al loguearse -->
+        <button id="msg-header-btn" onclick="abrirMensajesDesdeHeader()" title="Mensajes con el Profe">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span id="msg-header-badge"></span>
+        </button>
+    </div>
 </header>
 
 <div id="subject-bar" style="display:none">
@@ -539,9 +565,13 @@ function showLoginScreen(){
     document.getElementById('subject-bar').style.display='none';
     document.getElementById('promo-ticker').style.display='none';
     document.getElementById('upload-area').style.display='none';
-    document.getElementById('auth-area').innerHTML='';
+    document.getElementById('msg-header-btn').style.display='none';
+    // Limpiar auth-area excepto el botón de mensajes
+    const authArea=document.getElementById('auth-area');
+    const msgBtn=document.getElementById('msg-header-btn');
+    authArea.innerHTML='';
+    authArea.appendChild(msgBtn);
     document.getElementById('chat-box').innerHTML='';
-
 }
 
 async function showApp(user){
@@ -552,7 +582,16 @@ async function showApp(user){
     const firstName=(user.displayName||user.email.split('@')[0]).split(' ')[0];
     const avatarUrl=user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=2a52d4&color=fff&size=64`;
 
-    document.getElementById('auth-area').innerHTML=`
+    // Inyectar quota-badge y user-menu DENTRO de auth-area, preservando el btn de mensajes
+    const authArea=document.getElementById('auth-area');
+    // Limpiar todo excepto el botón de mensajes
+    const msgBtn=document.getElementById('msg-header-btn');
+    authArea.innerHTML='';
+    authArea.appendChild(msgBtn);
+
+    const extra=document.createElement('div');
+    extra.style.cssText='display:flex;align-items:center;gap:8px;';
+    extra.innerHTML=`
         <span id="quota-badge"></span>
         <div class="user-menu-wrap">
             <div class="user-trigger" id="user-trigger">
@@ -569,6 +608,10 @@ async function showApp(user){
                 <button class="dd-item danger" id="dd-logout-btn">↩ Cerrar sesión</button>
             </div>
         </div>`;
+    authArea.appendChild(extra);
+
+    // Mostrar icono de mensajes
+    msgBtn.style.display='flex';
 
     document.getElementById('user-trigger').onclick=e=>{
         e.stopPropagation();
@@ -586,6 +629,12 @@ async function showApp(user){
     };
 
     await updateQuotaBadge(user.uid);
+    // Actualizar badge de mensajes
+    updateMsgHeaderBadge(user);
+    // Aplicar restricciones admin
+    if(isAdmin){
+        popupShown=true; // prevenir popup
+    }
     showChat(user,firstName);
 }
 
@@ -742,6 +791,8 @@ function showCreditsBanner(){
 }
 
 function showPromoBanner(){
+    // No mostrar al admin
+    if(auth.currentUser&&auth.currentUser.email===ADMIN_EMAIL)return;
     // No mostrar duplicado
     if(document.getElementById('promo-banner-el'))return;
     const box=document.getElementById('chat-box');
@@ -1343,10 +1394,50 @@ async function sendAdminReply(msgId, userEmail){
 
 function showChatFromAdmin(){
     document.getElementById('admin-panel').style.display='none';
-    document.getElementById('promo-ticker').style.display='flex';
+    document.getElementById('promo-ticker').style.display=
+        (auth.currentUser?.email===ADMIN_EMAIL)?'none':'flex';
     document.getElementById('chat-box').style.display='flex';
     document.getElementById('input-area').style.display='block';
     document.getElementById('upload-area').style.display='block';
+}
+
+// ── MENSAJES EN HEADER ────────────────────────────────────────────────────────
+async function updateMsgHeaderBadge(user){
+    if(!user)return;
+    try{
+        // Buscar mensajes con respuesta no leída
+        const snap=await db.collection('messages')
+            .where('uid','==',user.uid)
+            .orderBy('timestamp','desc')
+            .limit(10)
+            .get();
+        const unread=snap.docs.filter(d=>d.data().reply&&!d.data().replyRead).length;
+        const badge=document.getElementById('msg-header-badge');
+        if(!badge)return;
+        if(unread>0){
+            badge.textContent=unread;
+            badge.style.display='flex';
+        }else{
+            badge.style.display='none';
+        }
+    }catch(e){/* silencioso */}
+}
+
+function abrirMensajesDesdeHeader(){
+    // Si hay panel abierto, hacer scroll a él
+    const existing=document.getElementById('msg-panel-el');
+    if(existing){
+        existing.scrollIntoView({behavior:'smooth'});
+        return;
+    }
+    // Si estamos en admin, volver al chat primero
+    if(document.getElementById('admin-panel').style.display!=='none'){
+        showChatFromAdmin();
+    }
+    showMsgPanel();
+    // Limpiar badge al abrir
+    const badge=document.getElementById('msg-header-badge');
+    if(badge)badge.style.display='none';
 }
 </script>
 </body>
