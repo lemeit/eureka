@@ -67,6 +67,36 @@
         .btn-login{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:7px;transition:background .15s;}
         .btn-login:hover{background:var(--accent-dark);}
 
+
+        /* ── TICKER PUBLICITARIO ── */
+        #promo-ticker{
+            background:#1a5c4e;
+            color:#fff;
+            height:28px;
+            display:none;
+            align-items:center;
+            overflow:hidden;
+            flex-shrink:0;
+            cursor:pointer;
+            position:relative;
+        }
+        #promo-ticker:hover{background:#155446;}
+        .ticker-track{
+            display:flex;
+            white-space:nowrap;
+            animation:tickerScroll 28s linear infinite;
+        }
+        #promo-ticker:hover .ticker-track{animation-play-state:paused;}
+        .ticker-item{
+            font-size:11px;font-weight:600;
+            padding:0 40px;
+            letter-spacing:.2px;
+        }
+        .ticker-sep{opacity:.5;padding:0 4px;}
+        @keyframes tickerScroll{
+            0%{transform:translateX(0);}
+            100%{transform:translateX(-50%);}
+        }
         /* ── SUBJECT BAR ── */
         #subject-bar{display:flex;gap:5px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
         #subject-bar::-webkit-scrollbar{display:none;}
@@ -347,6 +377,21 @@
     <p class="login-footer">Acceso gratuito · 5 consultas + 1 archivo por día</p>
 </div>
 
+
+<!-- TICKER PROMOCIONAL -->
+<div id="promo-ticker" onclick="window.open('https://wa.me/5492344546609?text=Hola,%20vi%20EUREKA%20y%20quiero%20info%20sobre%20clases','_blank')">
+    <div class="ticker-track">
+        <span class="ticker-item">📚 ¿Necesitás refuerzo? &nbsp;·&nbsp; Clases particulares online y presenciales</span>
+        <span class="ticker-item">📱 WhatsApp: +54 9 2344 546 609</span>
+        <span class="ticker-item">📸 Instagram: @lemeitok</span>
+        <span class="ticker-item">⚛ Física &nbsp;·&nbsp; ⚗ Química &nbsp;·&nbsp; 🔬 Fisicoquímica &nbsp;·&nbsp; 🎓 Cursos de ingreso</span>
+        <span class="ticker-item">📚 ¿Necesitás refuerzo? &nbsp;·&nbsp; Clases particulares online y presenciales</span>
+        <span class="ticker-item">📱 WhatsApp: +54 9 2344 546 609</span>
+        <span class="ticker-item">📸 Instagram: @lemeitok</span>
+        <span class="ticker-item">⚛ Física &nbsp;·&nbsp; ⚗ Química &nbsp;·&nbsp; 🔬 Fisicoquímica &nbsp;·&nbsp; 🎓 Cursos de ingreso</span>
+    </div>
+</div>
+
 <!-- CHAT -->
 <div id="chat-box" style="display:none"></div>
 
@@ -492,6 +537,7 @@ function showLoginScreen(){
     document.getElementById('admin-panel').style.display='none';
     document.getElementById('input-area').style.display='none';
     document.getElementById('subject-bar').style.display='none';
+    document.getElementById('promo-ticker').style.display='none';
     document.getElementById('upload-area').style.display='none';
     document.getElementById('auth-area').innerHTML='';
     document.getElementById('chat-box').innerHTML='';
@@ -502,6 +548,7 @@ async function showApp(user){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('subject-bar').style.display='flex';
     const isAdmin=user.email===ADMIN_EMAIL;
+    if(!isAdmin)document.getElementById('promo-ticker').style.display='flex';
     const firstName=(user.displayName||user.email.split('@')[0]).split(' ')[0];
     const avatarUrl=user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=2a52d4&color=fff&size=64`;
 
@@ -1115,6 +1162,7 @@ async function showAdminPanel(){
     document.getElementById('chat-box').style.display='none';
     document.getElementById('input-area').style.display='none';
     document.getElementById('upload-area').style.display='none';
+    document.getElementById('promo-ticker').style.display='none';
     const panel=document.getElementById('admin-panel');
     panel.style.display='flex';panel.style.flexDirection='column';
     panel.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);font-family:'Space Mono',monospace;font-size:12px;">Cargando…</div>`;
@@ -1295,6 +1343,7 @@ async function sendAdminReply(msgId, userEmail){
 
 function showChatFromAdmin(){
     document.getElementById('admin-panel').style.display='none';
+    document.getElementById('promo-ticker').style.display='flex';
     document.getElementById('chat-box').style.display='flex';
     document.getElementById('input-area').style.display='block';
     document.getElementById('upload-area').style.display='block';
