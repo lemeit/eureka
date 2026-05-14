@@ -917,20 +917,20 @@ async function sendUserMessage(){
 // ── POPUP FLOTANTE ───────────────────────────────────────────────────────────
 let popupShown=false;
 function initPopup(){
-    // Mostrar popup después de 45 segundos si el usuario está logueado y no lo cerró
+    // Mostrar popup después de 30 segundos si el usuario está logueado y no lo cerró
     setTimeout(()=>{
         if(auth.currentUser&&!popupShown){
             const pop=document.getElementById('float-popup');
             if(pop){pop.classList.add('show');popupShown=true;}
         }
-    },45000);
-    // También mostrar si el usuario lleva 3+ minutos sin enviar preguntas
+    },30000);
+    // También mostrar si el usuario lleva 2+ minutos sin enviar preguntas
     setTimeout(()=>{
         if(auth.currentUser&&!popupShown){
             const pop=document.getElementById('float-popup');
             if(pop){pop.classList.add('show');popupShown=true;}
         }
-    },180000);
+    },120000);
 }
 function closePopup(){
     document.getElementById('float-popup')?.classList.remove('show');
