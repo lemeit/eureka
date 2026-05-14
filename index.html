@@ -372,7 +372,6 @@
     <button class="subj-btn" data-subj="carbono">🧬 Qca. Carbono</button>
     <button class="subj-btn" data-subj="biofisica">🧫 Biofísica</button>
     <button class="subj-btn" data-subj="ingreso">🎓 Ingreso univ.</button>
-    <button class="subj-btn" id="clear-btn" onclick="clearChat()" style="margin-left:auto;color:var(--muted);" title="Limpiar conversación">↺ Limpiar</button>
 </div>
 
 <!-- LOGIN -->
@@ -511,9 +510,15 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 let currentSubject = 'fisica';
 document.querySelectorAll('.subj-btn').forEach(btn=>{
     btn.onclick=()=>{
+        const alreadyActive = btn.classList.contains('active');
         document.querySelectorAll('.subj-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        currentSubject=btn.dataset.subj;
+        if(!alreadyActive){
+            btn.classList.add('active');
+            currentSubject=btn.dataset.subj;
+        } else {
+            // Se deseleccionó — volver a física por defecto sin marcar nada
+            currentSubject='fisica';
+        }
     };
 });
 
@@ -587,7 +592,6 @@ async function showApp(user){
     // Limpiar todo excepto el botón de mensajes
     const msgBtn=document.getElementById('msg-header-btn');
     authArea.innerHTML='';
-    authArea.appendChild(msgBtn);
 
     const extra=document.createElement('div');
     extra.style.cssText='display:flex;align-items:center;gap:8px;';
@@ -609,6 +613,8 @@ async function showApp(user){
             </div>
         </div>`;
     authArea.appendChild(extra);
+    // Icono de mensajes va AL FINAL (derecha del todo antes del avatar)
+    extra.insertBefore(msgBtn, extra.querySelector('.user-menu-wrap'));
 
     // Mostrar icono de mensajes
     msgBtn.style.display='flex';
@@ -668,7 +674,7 @@ async function updateQuotaBadge(uid){
     const remU=Math.max(0,MAX_UPLOADS-d.uploadsUsed);
     const badge=document.getElementById('quota-badge');
     if(!badge)return{remQ,remU};
-    badge.textContent=`${remQ}✉ ${remU}📎`;
+    badge.textContent=`${remQ} consultas · ${remU} archivo`;
     badge.className='';
     if(remQ===0&&remU===0)badge.classList.add('danger');
     else if(remQ<=1)badge.classList.add('warning');
