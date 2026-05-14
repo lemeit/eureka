@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>EUREKA · Tutor IA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
     <!-- KaTeX para fórmulas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -19,7 +19,7 @@
     <style>
         :root{
             --bg:#f7f6f2;--surface:#fff;--border:#e2e0d8;--text:#1a1814;--muted:#8a8680;
-            --accent:#2a52d4;--accent-light:#eef1fc;--accent-dark:#1a3aa8;
+            --accent:#2a7a6e;--accent-light:#e8f5f2;--accent-dark:#1e6058;
             --amber:#b45309;--amber-light:#fef3e2;
             --red:#dc2626;--red-light:#fef2f2;
             --green:#15803d;--green-light:#f0fdf4;
@@ -33,9 +33,8 @@
         /* ── HEADER ── */
         header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow);z-index:100;}
         .logo{display:flex;align-items:center;gap:9px;}
-        .logo-badge{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;color:#fff;font-size:14px;flex-shrink:0;}
-        .logo-text{font-family:'Space Mono',monospace;font-weight:700;font-size:16px;letter-spacing:-.5px;}
-        .logo-sub{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;line-height:1;}
+        .logo-text{font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:18px;letter-spacing:-.3px;line-height:1;}
+        .logo-sub{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;line-height:1;margin-top:2px;}
         #auth-area{display:flex;align-items:center;gap:8px;position:relative;}
 
         /* quota */
@@ -348,10 +347,26 @@
 <body>
 <header>
     <div class="logo">
-        <div class="logo-badge">E</div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="36" height="36" style="flex-shrink:0;overflow:visible">
+            <!-- Escalones base -->
+            <rect x="2" y="42" width="44" height="4" rx="1" fill="#2a7a6e"/>
+            <rect x="4" y="38" width="40" height="4" rx="1" fill="#3a9080"/>
+            <!-- 5 columnas -->
+            <rect x="5"  y="18" width="4" height="20" rx="1" fill="#2a7a6e"/>
+            <rect x="13" y="18" width="4" height="20" rx="1" fill="#2a7a6e"/>
+            <rect x="21" y="18" width="4" height="20" rx="1" fill="#2a7a6e"/>
+            <rect x="29" y="18" width="4" height="20" rx="1" fill="#2a7a6e"/>
+            <rect x="37" y="18" width="4" height="20" rx="1" fill="#2a7a6e"/>
+            <!-- Friso -->
+            <rect x="3" y="13" width="42" height="5" rx="1" fill="#3a9080"/>
+            <!-- Frontón -->
+            <polygon points="24,2 2,13 46,13" fill="#2a7a6e"/>
+            <!-- Sol -->
+            <circle cx="24" cy="1" r="3" fill="#3a9080"/>
+        </svg>
         <div>
-            <div class="logo-text">EUREKA</div>
-            <div class="logo-sub">Tutor · Física &amp; Química</div>
+            <div class="logo-text">Eureka<sup style="font-size:8px;font-weight:800;background:var(--accent);color:#fff;padding:1px 4px;border-radius:2px;font-family:'DM Sans',sans-serif;letter-spacing:.5px;margin-left:2px;">AI</sup><sup style="font-size:8px;color:var(--muted);font-family:'DM Sans',sans-serif;margin-left:1px;">β</sup></div>
+            <div class="logo-sub">Entorno de Unificación Racional Estimulando Knowledge Activo</div>
         </div>
     </div>
     <div id="auth-area">
@@ -461,9 +476,18 @@
 <script>
 // ── CONSTANTES ──────────────────────────────────────────────────────────────
 const WORKER_URL  = "https://eureka-proxy.fisicai-eureka-01.workers.dev";
-const MAX_QUERIES = 5;   // consultas de texto por día
-const MAX_UPLOADS = 1;   // subidas de archivo por día
-const ADMIN_EMAIL = "fisicai.eureka.01@gmail.com";
+const MAX_QUERIES = 5;
+const MAX_UPLOADS = 1;
+
+// Admin emails se cargan desde Firestore /config/admins
+let ADMIN_EMAILS = [];
+async function cargarAdmins(){
+    try{
+        const doc = await db.collection('config').doc('admins').get();
+        if(doc.exists) ADMIN_EMAILS = doc.data().emails || [];
+    }catch(e){ console.warn('No se pudo cargar config admins:', e.message); }
+}
+function esAdmin(email){ return ADMIN_EMAILS.includes(email); }
 
 const SUBJ_LABELS = {
     fisica:'Física', quimica:'Química', fisq:'Fisicoquímica',
@@ -505,6 +529,7 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db   = firebase.firestore();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // ── SUBJECT ──────────────────────────────────────────────────────────────────
 let currentSubject = 'fisica';
@@ -560,7 +585,10 @@ document.getElementById('email-action-btn').onclick=async()=>{
 });
 
 // ── AUTH STATE ───────────────────────────────────────────────────────────────
-auth.onAuthStateChanged(user=>{if(user)showApp(user);else showLoginScreen();});
+auth.onAuthStateChanged(async user=>{
+    await cargarAdmins();
+    if(user) showApp(user); else showLoginScreen();
+});
 
 function showLoginScreen(){
     document.getElementById('login-screen').style.display='flex';
@@ -582,10 +610,10 @@ function showLoginScreen(){
 async function showApp(user){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('subject-bar').style.display='flex';
-    const isAdmin=user.email===ADMIN_EMAIL;
+    const isAdmin=esAdmin(user.email);
     if(!isAdmin)document.getElementById('promo-ticker').style.display='flex';
     const firstName=(user.displayName||user.email.split('@')[0]).split(' ')[0];
-    const avatarUrl=user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=2a52d4&color=fff&size=64`;
+    const avatarUrl=user.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=2a7a6e&color=fff&size=64`;
 
     // Inyectar quota-badge y user-menu DENTRO de auth-area, preservando el btn de mensajes
     const authArea=document.getElementById('auth-area');
@@ -798,7 +826,7 @@ function showCreditsBanner(){
 
 function showPromoBanner(){
     // No mostrar al admin
-    if(auth.currentUser&&auth.currentUser.email===ADMIN_EMAIL)return;
+    if(auth.currentUser&&esAdmin(auth.currentUser.email))return;
     // No mostrar duplicado
     if(document.getElementById('promo-banner-el'))return;
     const box=document.getElementById('chat-box');
@@ -1367,7 +1395,7 @@ async function sendAdminReply(msgId, userEmail){
 function showChatFromAdmin(){
     document.getElementById('admin-panel').style.display='none';
     document.getElementById('promo-ticker').style.display=
-        (auth.currentUser?.email===ADMIN_EMAIL)?'none':'flex';
+        (auth.currentUser&&esAdmin(auth.currentUser.email))?'none':'flex';
     document.getElementById('chat-box').style.display='flex';
     document.getElementById('input-area').style.display='block';
     document.getElementById('upload-area').style.display='block';
