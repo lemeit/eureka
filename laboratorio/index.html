@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EUREKA - Física Interactiva</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="glass-nav">
+        <div class="nav-content">
+            <img src="img/logo.png" class="nav-logo" alt="Eureka Logo">
+            <div class="nav-links">
+                <button onclick="cargarTeoria('vectores.json')" class="nav-btn">Vectores</button>
+                <button onclick="cargarTeoria('cinematica.json')" class="nav-btn">Cinemática</button>
+                <button onclick="abrirLaboratorio()" class="btn-primary-glow">Laboratorio Virtual</button>
+            </div>
+        </div>
+    </nav>
+
+<main id="main-content" class="fade-in">
+    <section class="dashboard-hero">
+        <div class="hero-overlay"></div>
+        <div class="dashboard-container">
+            <div class="status-bar">
+                <span class="pulse-icon">●</span> SISTEMA EUREKA ONLINE | LABORATORIO ACTIVO
+            </div>
+            
+            <h1>Panel de <span class="text-gradient">Control Físico</span></h1>
+            <p class="subtitle">Accede a los módulos de simulación y bases teóricas de alta precisión.</p>
+
+            <div class="lab-grid">
+                <div class="module-card" onclick="cargarTeoria('vectores.json')">
+                    <div class="module-header">MÓDULO 01</div>
+                    <div class="module-body">
+                        <h3>ANÁLISIS VECTORIAL</h3>
+                        <p>Operaciones algebraicas y representación gráfica en 2D.</p>
+                        <div class="module-footer">ACCEDER A TEORÍA _</div>
+                    </div>
+                </div>
+
+                <div class="module-card" onclick="cargarTeoria('cinematica.json')">
+                    <div class="module-header">MÓDULO 02</div>
+                    <div class="module-body">
+                        <h3>CINEMÁTICA PRO</h3>
+                        <p>Dinámica de proyectiles, energía y trazado de curvas.</p>
+                        <div class="module-footer">ACCEDER A TEORÍA _</div>
+                    </div>
+                </div>
+
+                <div class="module-card highlight" onclick="abrirLaboratorio()">
+                    <div class="module-header">EXPERIMENTAL</div>
+                    <div class="module-body">
+                        <h3>CENTRAL DE LABORATORIO</h3>
+                        <p>Entorno de simulación libre para experimentación de datos.</p>
+                        <div class="module-footer">INICIAR SIMULADORES >></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+    <aside id="side-panel" style="display: none;"></aside>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

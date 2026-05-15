@@ -65,14 +65,36 @@ El proyecto inició como un sistema RAG (Retrieval-Augmented Generation) que ind
 ## Estructura del repositorio
 
 ```
-eureka/
-├── index.html       ← App completa (subir a GitHub Pages)
-├── worker.js        ← Cloudflare Worker (NO se sube a GitHub)
+Eureka-Tutor/
+├── index.html              ← Portal AI (Tutor con Firebase + Groq) — raíz de GitHub Pages
+├── docs/                   ← Flyers y assets de difusión
+├── src/
+│   └── worker.js           ← Cloudflare Worker (referencia local, NO se publica)
+├── laboratorio/            ← Sitio clásico de simuladores (hoja aparte)
+│   ├── index.html          ← Dashboard del Laboratorio Virtual (p5.js + Chart.js + MathJax)
+│   ├── css/                ← Estilos del laboratorio
+│   ├── js/                 ← app.js + simuladores p5.js (sim_cinematica*, sim_vectores*)
+│   ├── data/               ← Teoría en JSON (vectores, cinemática)
+│   ├── img/                ← Logos
+│   ├── figuras/            ← Diagramas por tema (cinematica/, vectores/)
+│   ├── interactivos/       ← Tests interactivos HTML (cinemática, fluidos, Newton, etc.)
+│   └── teoria/             ← Clases de teoría en Markdown (32 archivos)
 ├── .gitignore
 └── README.md
 ```
 
-> **`worker.js` NO se sube al repositorio público.** Guardarlo solo localmente como referencia.
+> **`src/worker.js` NO se sube al repositorio público** (está cubierto por `.gitignore`). Guardarlo solo localmente como referencia.
+
+### Sitio doble: Portal AI + Laboratorio
+
+El repo aloja **dos sitios estáticos** servidos desde la misma URL de GitHub Pages:
+
+| Ruta | Qué es | Stack |
+|---|---|---|
+| `https://lemeit.github.io/eureka/` | Portal AI — Tutor conversacional con Firebase + Groq | HTML/JS vanilla + Firebase + Cloudflare Worker |
+| `https://lemeit.github.io/eureka/laboratorio/` | Laboratorio Virtual — simuladores interactivos y teoría | HTML/JS vanilla + p5.js + MathJax + Chart.js |
+
+El portal AI tiene un botón discreto **"Laboratorio"** en el header que enlaza a la subruta. Los dos sitios son independientes: el laboratorio no requiere login y no consume cuota de Groq. La integración futura (p.ej. lanzar simuladores desde respuestas del tutor o sumar Jupyter Book compilado en `laboratorio/teoria/_build/`) queda como camino abierto.
 
 ---
 

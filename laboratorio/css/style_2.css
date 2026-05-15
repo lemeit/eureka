@@ -1,0 +1,179 @@
+/* --- BASE Y TIPOGRAFÍA --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #f8fafc; 
+    color: #1e293b; 
+    /* CAMBIO: Eliminamos height: 100vh y overflow: hidden */
+    min-height: 100vh;
+}
+
+/* Mejora de espaciado en la teoría */
+.content-area h1, .content-area h2 { 
+    margin: 40px 0 20px 0; 
+    line-height: 1.2;
+}
+
+.content-area p { 
+    margin-bottom: 20px; 
+    line-height: 1.6; /* Texto menos apretado */
+    font-size: 1.05rem;
+}
+
+
+/* --- HEADER --- */
+.main-header { 
+    height: 90px; /* Le damos un poco más de altura total */
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 0 40px; /* Más espacio a los costados para que no toque los bordes */
+    background: white; 
+    border-bottom: 2px solid #e2e8f0; /* Línea un poquito más marcada */
+}
+
+.nav-logo { 
+    height: 65px !important; /* El logo un poco más grande */
+    width: auto; 
+    transition: transform 0.2s; /* Un efecto suave al pasar el mouse */
+}
+
+.nav-logo:hover {
+    transform: scale(1.05); /* Se agranda apenas un poquito al tocarlo */
+}
+
+/* --- ESTRUCTURA DASHBOARD (Lado a Lado) --- */
+.dashboard {
+    display: flex; 
+    flex-direction: row;
+    width: 100%;
+    /* Eliminamos cualquier altura fija o overflow hidden que bloquee el scroll */
+    align-items: flex-start; 
+}
+
+/* --- ÁREA DE TEORÍA (IZQUIERDA) --- */
+.content-area {
+    flex: 1; 
+    padding: 40px;
+    background: white;
+    min-height: 100vh; /* Permite que el contenido crezca */
+    overflow-y: visible; /* Liberamos el scroll principal */
+}
+
+/* --- PANEL DEL SIMULADOR (DERECHA) --- */
+.simulator-panel {
+    width: 450px; /* Ancho ampliado como pediste */
+    padding: 25px;
+    background: #f1f5f9;
+    border-left: 1px solid #e2e8f0;
+    
+    /* Efecto "Sticky": El simulador se queda quieto mientras bajas la teoría */
+    position: sticky;
+    top: 0;
+    height: 100vh; 
+    overflow-y: auto; /* Si los controles son muchos, scrollea internamente */
+    flex-shrink: 0;
+}
+
+/* Fix para los inputs y el canvas */
+#canvas-holder {
+    width: 100%;
+    height: 340px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.input-grid input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    display: block; /* Asegura que no se encimen */
+}
+
+.ops-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+/* --- BOTONES UNIFICADOS --- */
+.nav-btn, .btn-primary, .ops-row button, .btn-danger {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover, .btn-primary:hover { background: #334155; transform: translateY(-1px); }
+
+.btn-danger { background: #ef4444; width: 100%; margin-top: 10px; }
+.btn-danger:hover { background: #dc2626; }
+
+/* --- RECUADROS DE TEORÍA --- */
+.ejercicio-resuelto {
+    border: 1px solid #e2e8f0;
+    border-left: 6px solid #1e293b;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 25px;
+    margin: 30px 0;
+    overflow-wrap: break-word;
+}
+
+.linea-solucion {
+    padding: 12px 0;
+    border-top: 1px solid #e2e8f0;
+    color: #334155;
+    font-weight: 500;
+}
+
+.res-box {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-family: monospace;
+    font-size: 0.9rem;
+    margin-top: 15px;
+}
+
+/* Espaciado para la teoría cargada */
+#main-content section {
+    margin-bottom: 60px; /* Separa los temas entre sí */
+}
+
+#main-content h2 {
+    font-size: 2rem;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: #0f172a;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+#main-content p {
+    margin-bottom: 25px;
+    line-height: 1.8;
+}
+
+.content-area img {
+    max-width: 400px; /* Ajusta este valor a tu gusto */
+    height: auto;
+    display: block;
+    margin: 20px auto; /* Las centra y les da aire */
+    border-radius: 8px;
+}
