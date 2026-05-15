@@ -12,6 +12,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <!-- marked -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Mermaid (diagramas: flujo, secuencia, clases, mindmap, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- Chart.js (gráficos de datos numéricos: barras, líneas, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.js"></script>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -131,6 +135,14 @@
         /* KaTeX */
         .bubble.stay .katex-display{overflow-x:auto;overflow-y:hidden;padding:6px 0;}
         .bubble.stay .katex{font-size:1em;}
+
+        /* ── Diagramas y gráficos en respuestas del tutor ── */
+        .visual-block{margin:10px 0;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow-x:auto;}
+        .visual-block svg{max-width:100%;height:auto;display:block;margin:0 auto;}
+        .visual-block.chart-block{padding:8px;}
+        .visual-block canvas{max-width:100%;}
+        .visual-error{font-size:12px;color:var(--red);padding:8px;background:var(--red-light);border-radius:6px;font-family:'Space Mono',monospace;}
+        .visual-block-label{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;}
         /* subject pill */
         .subj-pill{display:inline-block;font-size:9px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 6px;border-radius:8px;margin-bottom:5px;letter-spacing:.4px;}
         .subj-pill.fisica{background:var(--accent-light);color:var(--accent);}
@@ -509,7 +521,39 @@ Estilo pedagógico OBLIGATORIO:
 1. Primero explicá brevemente el concepto clave necesario para resolver el problema (2-3 oraciones).
 2. Mostrá el desarrollo paso a paso, numerado.
 3. Al finalizar la resolución, hacé UNA sola pregunta socrática al alumno para verificar comprensión o invitarlo a reflexionar sobre el método. Ejemplos: "¿Por qué creés que usamos esa fórmula y no la otra?", "¿Qué pasaría si la temperatura fuera el doble?", "¿Podés identificar qué tipo de movimiento es este?". La pregunta debe ser concreta, relacionada con el ejercicio resuelto.
-4. No hagas más de una pregunta al final.`;
+4. No hagas más de una pregunta al final.
+
+VISUALIZACIONES (usalas SOLO cuando aporten valor pedagógico real, no por defecto):
+- Para diagramas conceptuales (mapas, flujos, esquemas de fuerzas, cadenas de razonamiento, jerarquías, comparaciones de procesos) emití un bloque de código con sintaxis Mermaid, ejemplo:
+\`\`\`mermaid
+flowchart LR
+  A[Fuerza aplicada] --> B[Aceleración]
+  B --> C[Cambio de velocidad]
+\`\`\`
+  Mermaid soporta: flowchart, sequenceDiagram, classDiagram, stateDiagram, mindmap, pie. NO inventes sintaxis fuera de lo soportado por Mermaid v10.
+- Para gráficos de datos numéricos (función vs tiempo, barras comparativas, distribución) emití un bloque JSON con configuración de Chart.js v4, ejemplo:
+\`\`\`chart
+{
+  "type": "line",
+  "data": {
+    "labels": ["0", "1", "2", "3", "4"],
+    "datasets": [{
+      "label": "v(t) m/s",
+      "data": [0, 5, 10, 15, 20],
+      "borderColor": "#2a7a6e",
+      "tension": 0.3
+    }]
+  },
+  "options": {
+    "scales": {
+      "y": { "title": { "display": true, "text": "Velocidad (m/s)" } },
+      "x": { "title": { "display": true, "text": "Tiempo (s)" } }
+    }
+  }
+}
+\`\`\`
+  Usá tipos válidos de Chart.js: line, bar, scatter, pie, doughnut, radar, polarArea. El JSON debe ser válido (sin comentarios, comillas dobles).
+- NO mezcles diagramas/gráficos donde no agregan claridad. Para una respuesta corta de teoría no hace falta diagrama.`;
 
 const SUBJ_PROMPTS = {
     fisica:   `Sos STAY, tutor experto en Física (nivel secundario y universitario). Respondé en español. Usá LaTeX para fórmulas: inline $...$ y bloque $$...$$. Sé preciso y claro.${SOCRATIC_SUFFIX}`,
@@ -539,6 +583,63 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+// ── MERMAID INIT ─────────────────────────────────────────────────────────────
+if(typeof mermaid!=='undefined'){
+    mermaid.initialize({
+        startOnLoad:false,
+        theme:'default',
+        securityLevel:'loose',
+        fontFamily:"'DM Sans', sans-serif"
+    });
+}
+
+// Renderiza bloques ```mermaid``` y ```chart``` dentro de `container` (la burbuja del mensaje)
+async function renderVisuals(container){
+    // Mermaid — diagramas declarativos
+    const mermaidBlocks=container.querySelectorAll('pre code.language-mermaid, pre code.lang-mermaid');
+    for(const el of mermaidBlocks){
+        const code=el.textContent.trim();
+        const id='m'+Math.random().toString(36).slice(2,10);
+        const wrap=document.createElement('div');
+        wrap.className='visual-block';
+        wrap.innerHTML='<div class="visual-block-label">📊 Diagrama</div>';
+        try{
+            const {svg}=await mermaid.render(id,code);
+            const svgWrap=document.createElement('div');svgWrap.innerHTML=svg;
+            wrap.appendChild(svgWrap);
+            el.parentElement.replaceWith(wrap);
+        }catch(e){
+            wrap.innerHTML+=`<div class="visual-error">No se pudo renderizar el diagrama: ${escapeHtml(e.message||String(e))}</div><pre style="font-size:11px;margin-top:6px;white-space:pre-wrap">${escapeHtml(code)}</pre>`;
+            el.parentElement.replaceWith(wrap);
+        }
+    }
+    // Chart.js — datos numéricos (JSON con tipo/datos)
+    const chartBlocks=container.querySelectorAll('pre code.language-chart, pre code.lang-chart');
+    for(const el of chartBlocks){
+        const raw=el.textContent.trim();
+        const wrap=document.createElement('div');
+        wrap.className='visual-block chart-block';
+        wrap.innerHTML='<div class="visual-block-label">📈 Gráfico</div>';
+        try{
+            const config=JSON.parse(raw);
+            // Defaults razonables
+            config.options=config.options||{};
+            config.options.responsive=true;
+            config.options.maintainAspectRatio=false;
+            const canvasWrap=document.createElement('div');
+            canvasWrap.style.cssText='position:relative;height:280px;width:100%;';
+            const canvas=document.createElement('canvas');
+            canvasWrap.appendChild(canvas);
+            wrap.appendChild(canvasWrap);
+            el.parentElement.replaceWith(wrap);
+            new Chart(canvas,config);
+        }catch(e){
+            wrap.innerHTML+=`<div class="visual-error">No se pudo renderizar el gráfico: ${escapeHtml(e.message||String(e))}</div><pre style="font-size:11px;margin-top:6px;white-space:pre-wrap">${escapeHtml(raw)}</pre>`;
+            el.parentElement.replaceWith(wrap);
+        }
+    }
+}
 
 // ── SUBJECT ──────────────────────────────────────────────────────────────────
 let currentSubject = 'fisica';
@@ -822,7 +923,10 @@ function addMessage(text,isUser=false,subject=null){
     bubble.appendChild(content);
     row.appendChild(av);row.appendChild(bubble);
     box.appendChild(row);
-    if(!isUser)renderLatex(bubble);
+    if(!isUser){
+        renderLatex(bubble);
+        renderVisuals(bubble);
+    }
     box.scrollTop=box.scrollHeight;
 }
 
@@ -1187,8 +1291,9 @@ async function sendToGroq(user,text,subj,isUpload){
             }
         }
 
-        // Render final con KaTeX
+        // Render final con KaTeX + diagramas/gráficos
         renderLatex(bubble);
+        await renderVisuals(bubble);
         box.scrollTop=box.scrollHeight;
 
         // Tokens exactos del último chunk SSE de Groq
