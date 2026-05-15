@@ -94,7 +94,7 @@ El repo aloja **dos sitios estáticos** servidos desde la misma URL de GitHub Pa
 | `https://lemeit.github.io/eureka/` | Portal AI — Tutor conversacional con Firebase + Groq | HTML/JS vanilla + Firebase + Cloudflare Worker |
 | `https://lemeit.github.io/eureka/laboratorio/` | Laboratorio Virtual — simuladores interactivos y teoría | HTML/JS vanilla + p5.js + MathJax + Chart.js |
 
-El portal AI tiene un botón discreto **"Laboratorio"** en el header que enlaza a la subruta. Los dos sitios son independientes: el laboratorio no requiere login y no consume cuota de Groq. La integración futura (p.ej. lanzar simuladores desde respuestas del tutor o sumar Jupyter Book compilado en `laboratorio/teoria/_build/`) queda como camino abierto.
+Los dos sitios son **independientes**: el laboratorio no requiere login y no consume cuota de Groq. Por ahora se accede al laboratorio por **URL directa** (`/laboratorio/`), sin enlace visible desde el portal AI — esto permite trabajar el laboratorio por separado hasta que esté pulido para integrarlo. La integración futura (p.ej. lanzar simuladores desde respuestas del tutor, agregar un botón en el header, o sumar Jupyter Book compilado en `laboratorio/teoria/_build/`) queda como camino abierto.
 
 ---
 

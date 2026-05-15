@@ -66,11 +66,7 @@
         .btn-login{background:var(--accent);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:7px;transition:background .15s;}
         .btn-login:hover{background:var(--accent-dark);}
 
-        /* link laboratorio (sitio clásico de simuladores) */
-        .lab-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;border:1px solid var(--border);background:var(--bg);padding:5px 10px;border-radius:20px;transition:all .15s;font-family:'DM Sans',sans-serif;margin-right:6px;}
-        .lab-link:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-light);}
-        .lab-link svg{flex-shrink:0;}
-        @media(max-width:520px){.lab-link .lab-txt{display:none;}.lab-link{padding:5px 7px;}}
+        /* (botón Laboratorio removido del header — se accede por URL directa /laboratorio/) */
 
 
         /* ── TICKER PUBLICITARIO ── */
@@ -375,14 +371,6 @@
             <div class="logo-sub">Entorno de Unificación Racional Estimulando Knowledge Activo</div>
         </div>
     </div>
-    <a href="./laboratorio/" class="lab-link" title="Laboratorio Virtual · simuladores y teoría interactiva">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 2v6L4.5 17a2.5 2.5 0 0 0 2.5 3h10a2.5 2.5 0 0 0 2.5-3L15 8V2"/>
-            <line x1="9" y1="2" x2="15" y2="2"/>
-            <line x1="7" y1="14" x2="17" y2="14"/>
-        </svg>
-        <span class="lab-txt">Laboratorio</span>
-    </a>
     <div id="auth-area">
         <!-- Icono mensajes — se activa al loguearse -->
         <button id="msg-header-btn" onclick="abrirMensajesDesdeHeader()" title="Mensajes con el Profe">
@@ -498,10 +486,17 @@ let ADMIN_EMAILS = [];
 async function cargarAdmins(){
     try{
         const doc = await db.collection('config').doc('admins').get();
-        if(doc.exists) ADMIN_EMAILS = doc.data().emails || [];
+        if(doc.exists){
+            // Normalizar: trim + lowercase para evitar problemas tipográficos
+            ADMIN_EMAILS = (doc.data().emails||[]).map(e=>String(e||'').trim().toLowerCase());
+        }
+        console.info('[EUREKA] Admins cargados:', ADMIN_EMAILS);
     }catch(e){ console.warn('No se pudo cargar config admins:', e.message); }
 }
-function esAdmin(email){ return ADMIN_EMAILS.includes(email); }
+function esAdmin(email){
+    if(!email)return false;
+    return ADMIN_EMAILS.includes(String(email).trim().toLowerCase());
+}
 
 const SUBJ_LABELS = {
     fisica:'Física', quimica:'Química', fisq:'Fisicoquímica',
