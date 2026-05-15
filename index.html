@@ -600,8 +600,14 @@ document.getElementById('email-action-btn').onclick=async()=>{
 
 // ── AUTH STATE ───────────────────────────────────────────────────────────────
 auth.onAuthStateChanged(async user=>{
-    await cargarAdmins();
-    if(user) showApp(user); else showLoginScreen();
+    if(user){
+        // Solo cargar config/admins cuando hay sesión (reglas Firestore lo requieren)
+        await cargarAdmins();
+        showApp(user);
+    } else {
+        ADMIN_EMAILS = [];
+        showLoginScreen();
+    }
 });
 
 function showLoginScreen(){
@@ -670,7 +676,13 @@ async function showApp(user){
         document.getElementById('user-dropdown')?.classList.remove('open');
         document.getElementById('user-trigger')?.classList.remove('open');
     });
-    document.getElementById('dd-logout-btn').onclick=()=>auth.signOut();
+    document.getElementById('dd-logout-btn').onclick=async()=>{
+        await auth.signOut();
+        // Reload garantiza estado totalmente limpio (foto, chat, listeners, etc.)
+        // Nota: el cache de mensajes leídos (eureka_msgRead_<uid>) se MANTIENE adrede:
+        // si el mismo usuario vuelve a entrar, los mensajes ya leídos no reaparecen como nuevos.
+        location.reload();
+    };
     if(isAdmin)document.getElementById('dd-admin-btn').onclick=()=>{
         document.getElementById('user-dropdown').classList.remove('open');
         showAdminPanel();
@@ -895,45 +907,28 @@ function clearChat(){
 
 // ── PANEL DE MENSAJES MEJORADO ──────────────────────────────────────────────
 
-// Chequear respuestas pendientes al iniciar sesión y mostrarlas en el chat
-async function checkPendingReplies(user){
+// Estado "leído" client-side (localStorage por UID).
+// Las reglas de Firestore no permiten al alumno hacer update en messages,
+// así que persistimos el flag de leído en el navegador.
+function getReadMsgIds(uid){
     try{
-        const snap=await db.collection('messages')
-            .where('uid','==',user.uid)
-            .orderBy('timestamp','desc')
-            .limit(5)
-            .get();
-        const unread=snap.docs.filter(d=>d.data().reply&&!d.data().replyRead);
-        if(unread.length===0)return;
-        const box=document.getElementById('chat-box');
-        if(document.getElementById('reply-notif-el'))return;
-        const notif=document.createElement('div');
-        notif.className='reply-notification';
-        notif.id='reply-notif-el';
-        const items=unread.map(d=>{
-            const m=d.data();
-            const fecha=m.repliedAt?.toDate?m.repliedAt.toDate().toLocaleDateString('es-AR'):'';
-            return `<div class="reply-item">
-                <div class="reply-msg">Tu consulta: "${escapeHtml((m.text||'').slice(0,60))}${m.text?.length>60?'...':''}"</div>
-                <div class="reply-text">${escapeHtml(m.reply||'')}</div>
-                ${fecha?`<div class="reply-date">${fecha}</div>`:''}
-            </div>`;
-        }).join('');
-        notif.innerHTML=`
-            <h3>📬 Respuesta del Profe</h3>
-            ${items}
-            <div class="reply-actions">
-                <button class="btn-send-msg" onclick="markRepliesRead();showMsgPanel()">Ver todos mis mensajes</button>
-                <button class="btn-close-msg" onclick="markRepliesRead()">Cerrar</button>
-            </div>`;
-        box.appendChild(notif);
-        box.scrollTop=box.scrollHeight;
-        unread.forEach(d=>d.ref.update({replyRead:true}).catch(()=>{}));
-    }catch(e){
-        console.warn('checkPendingReplies error:',e.message);
-    }
+        const raw=localStorage.getItem('eureka_msgRead_'+uid);
+        return raw?new Set(JSON.parse(raw)):new Set();
+    }catch(e){ return new Set(); }
+}
+function addReadMsgIds(uid, ids){
+    if(!ids||!ids.length)return;
+    try{
+        const cur=getReadMsgIds(uid);
+        ids.forEach(id=>cur.add(id));
+        localStorage.setItem('eureka_msgRead_'+uid, JSON.stringify([...cur]));
+    }catch(e){}
 }
 
+// Compatibilidad: ya no inyectamos el popup invasivo en el chat.
+// El usuario se entera por el badge rojo del ícono de mensajes del header.
+// Función dejada como no-op por si algo externo todavía la invoca.
+async function checkPendingReplies(user){ /* desactivada — ahora se ve por el badge */ }
 function markRepliesRead(){
     document.getElementById('reply-notif-el')?.remove();
 }
@@ -1419,17 +1414,21 @@ function showChatFromAdmin(){
 async function updateMsgHeaderBadge(user){
     if(!user)return;
     try{
-        // Buscar mensajes con respuesta no leída
         const snap=await db.collection('messages')
             .where('uid','==',user.uid)
             .orderBy('timestamp','desc')
-            .limit(10)
+            .limit(20)
             .get();
-        const unread=snap.docs.filter(d=>d.data().reply&&!d.data().replyRead).length;
+        // Filtra: tiene reply, no fue marcado replyRead en Firestore Y no está marcado leído localmente
+        const readSet=getReadMsgIds(user.uid);
+        const unread=snap.docs.filter(d=>{
+            const m=d.data();
+            return m.reply && !m.replyRead && !readSet.has(d.id);
+        }).length;
         const badge=document.getElementById('msg-header-badge');
         if(!badge)return;
         if(unread>0){
-            badge.textContent=unread;
+            badge.textContent=unread>9?'9+':String(unread);
             badge.style.display='flex';
         }else{
             badge.style.display='none';
@@ -1437,7 +1436,8 @@ async function updateMsgHeaderBadge(user){
     }catch(e){/* silencioso */}
 }
 
-function abrirMensajesDesdeHeader(){
+async function abrirMensajesDesdeHeader(){
+    const user=auth.currentUser;
     // Si hay panel abierto, hacer scroll a él
     const existing=document.getElementById('msg-panel-el');
     if(existing){
@@ -1448,8 +1448,20 @@ function abrirMensajesDesdeHeader(){
     if(document.getElementById('admin-panel').style.display!=='none'){
         showChatFromAdmin();
     }
-    showMsgPanel();
-    // Limpiar badge al abrir
+    await showMsgPanel();
+    // Marcar TODAS las respuestas actuales como leídas localmente al abrir el panel
+    if(user){
+        try{
+            const snap=await db.collection('messages')
+                .where('uid','==',user.uid)
+                .orderBy('timestamp','desc')
+                .limit(20)
+                .get();
+            const ids=snap.docs.filter(d=>d.data().reply).map(d=>d.id);
+            addReadMsgIds(user.uid, ids);
+        }catch(e){}
+    }
+    // Apagar badge
     const badge=document.getElementById('msg-header-badge');
     if(badge)badge.style.display='none';
 }
