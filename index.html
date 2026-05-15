@@ -502,7 +502,7 @@ async function cargarAdmins(){
             // Normalizar: trim + lowercase para evitar problemas tipográficos
             ADMIN_EMAILS = (doc.data().emails||[]).map(e=>String(e||'').trim().toLowerCase());
         }
-        console.info('[EUREKA] Admins cargados:', ADMIN_EMAILS);
+        console.info('[EUREKA] Admins cargados:', ADMIN_EMAILS.length, 'email(s)');
     }catch(e){ console.warn('No se pudo cargar config admins:', e.message); }
 }
 function esAdmin(email){
@@ -523,37 +523,72 @@ Estilo pedagógico OBLIGATORIO:
 3. Al finalizar la resolución, hacé UNA sola pregunta socrática al alumno para verificar comprensión o invitarlo a reflexionar sobre el método. Ejemplos: "¿Por qué creés que usamos esa fórmula y no la otra?", "¿Qué pasaría si la temperatura fuera el doble?", "¿Podés identificar qué tipo de movimiento es este?". La pregunta debe ser concreta, relacionada con el ejercicio resuelto.
 4. No hagas más de una pregunta al final.
 
-VISUALIZACIONES (usalas SOLO cuando aporten valor pedagógico real, no por defecto):
-- Para diagramas conceptuales (mapas, flujos, esquemas de fuerzas, cadenas de razonamiento, jerarquías, comparaciones de procesos) emití un bloque de código con sintaxis Mermaid, ejemplo:
+VISUALIZACIONES — REGLAS ESTRICTAS:
+
+PROHIBIDO: NO uses NUNCA TikZ, pgfplots, asymptote, picture, ni ningún otro entorno gráfico de LaTeX. Esos NO renderizan en este sistema. Si emitís TikZ el alumno verá código basura.
+
+OBLIGATORIO: Si el alumno pide explícitamente "graficá", "diagrama", "mapa conceptual", "esquema", "flujo", "gráfico", "mostrame visualmente", "mind map", o similar → DEBÉS responder con un bloque mermaid o chart. No es opcional. No describas el diagrama con texto — emití el bloque.
+
+CÓMO ELEGIR:
+- Diagramas conceptuales / flujos / mapas mentales / esquemas / comparaciones → bloque \`\`\`mermaid\`\`\`
+- Gráficos de datos numéricos (funciones, barras, comparaciones cuantitativas) → bloque \`\`\`chart\`\`\` con JSON de Chart.js v4
+
+EJEMPLO 1 — pedido: "Mapa conceptual de las leyes de Newton":
 \`\`\`mermaid
-flowchart LR
-  A[Fuerza aplicada] --> B[Aceleración]
-  B --> C[Cambio de velocidad]
+mindmap
+  root((Leyes de Newton))
+    Inercia
+      Sin fuerza neta
+      Reposo o MRU
+    Fuerza y aceleración
+      F = m·a
+      Proporcional a F
+    Acción y reacción
+      Pares de fuerzas
+      Misma magnitud, sentido opuesto
 \`\`\`
-  Mermaid soporta: flowchart, sequenceDiagram, classDiagram, stateDiagram, mindmap, pie. NO inventes sintaxis fuera de lo soportado por Mermaid v10.
-- Para gráficos de datos numéricos (función vs tiempo, barras comparativas, distribución) emití un bloque JSON con configuración de Chart.js v4, ejemplo:
+
+EJEMPLO 2 — pedido: "Graficá v(t) para un MRUA con a=2 m/s² desde t=0 a t=5":
 \`\`\`chart
 {
   "type": "line",
   "data": {
-    "labels": ["0", "1", "2", "3", "4"],
+    "labels": ["0", "1", "2", "3", "4", "5"],
     "datasets": [{
-      "label": "v(t) m/s",
-      "data": [0, 5, 10, 15, 20],
+      "label": "v(t) [m/s]",
+      "data": [0, 2, 4, 6, 8, 10],
       "borderColor": "#2a7a6e",
-      "tension": 0.3
+      "backgroundColor": "rgba(42,122,110,0.1)",
+      "tension": 0.1,
+      "fill": true
     }]
   },
   "options": {
     "scales": {
-      "y": { "title": { "display": true, "text": "Velocidad (m/s)" } },
+      "y": { "title": { "display": true, "text": "Velocidad (m/s)" }, "beginAtZero": true },
       "x": { "title": { "display": true, "text": "Tiempo (s)" } }
     }
   }
 }
 \`\`\`
-  Usá tipos válidos de Chart.js: line, bar, scatter, pie, doughnut, radar, polarArea. El JSON debe ser válido (sin comentarios, comillas dobles).
-- NO mezcles diagramas/gráficos donde no agregan claridad. Para una respuesta corta de teoría no hace falta diagrama.`;
+
+EJEMPLO 3 — pedido: "Diagrama de flujo para resolver un problema de cinemática":
+\`\`\`mermaid
+flowchart TD
+  A[Leer enunciado] --> B[Identificar variables conocidas]
+  B --> C[Reconocer tipo de movimiento]
+  C --> D{¿MRU o MRUA?}
+  D -->|MRU| E[Usar x = x₀ + v·t]
+  D -->|MRUA| F[Usar x = x₀ + v₀·t + ½·a·t²]
+  E --> G[Despejar y calcular]
+  F --> G
+  G --> H[Verificar unidades]
+\`\`\`
+
+Mermaid soporta SOLO: flowchart, sequenceDiagram, classDiagram, stateDiagram, mindmap, pie, gantt, journey. NO inventes sintaxis fuera de la documentación oficial de Mermaid v10.
+Chart.js admite tipos: line, bar, scatter, pie, doughnut, radar, polarArea. El JSON debe ser válido (comillas dobles, sin comentarios, sin trailing commas).
+
+Cuando el alumno NO pide visualización explícitamente, podés sumar un diagrama si realmente aclara el concepto, pero no es obligatorio.`;
 
 const SUBJ_PROMPTS = {
     fisica:   `Sos STAY, tutor experto en Física (nivel secundario y universitario). Respondé en español. Usá LaTeX para fórmulas: inline $...$ y bloque $$...$$. Sé preciso y claro.${SOCRATIC_SUFFIX}`,
